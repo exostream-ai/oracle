@@ -1,0 +1,217 @@
+[
+  {
+    "model_id": "opus-4.5",
+    "family_id": "claude-4",
+    "display_name": "Claude Opus 4.5",
+    "ticker_sync": "OPUS-4.5",
+    "ticker_batch": "OPUS-4.5.B",
+    "context_window": 200000,
+    "launch_date": "2025-02-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "sonnet-4",
+    "family_id": "claude-4",
+    "display_name": "Claude Sonnet 4",
+    "ticker_sync": "SONNET-4",
+    "ticker_batch": "SONNET-4.B",
+    "context_window": 200000,
+    "launch_date": "2025-05-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "sonnet-3.5",
+    "family_id": "claude-3.5",
+    "display_name": "Claude 3.5 Sonnet",
+    "ticker_sync": "SONNET-3.5",
+    "ticker_batch": "SONNET-3.5.B",
+    "context_window": 200000,
+    "launch_date": "2024-06-20",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "haiku-3.5",
+    "family_id": "claude-3.5",
+    "display_name": "Claude 3.5 Haiku",
+    "ticker_sync": "HAIKU-3.5",
+    "ticker_batch": "HAIKU-3.5.B",
+    "context_window": 200000,
+    "launch_date": "2024-10-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-4.1",
+    "family_id": "gpt-4.1",
+    "display_name": "GPT-4.1",
+    "ticker_sync": "GPT-4.1",
+    "ticker_batch": "GPT-4.1.B",
+    "context_window": 1000000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-4.1-mini",
+    "family_id": "gpt-4.1",
+    "display_name": "GPT-4.1 mini",
+    "ticker_sync": "GPT-4.1-MINI",
+    "ticker_batch": "GPT-4.1-MINI.B",
+    "context_window": 1000000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-4.1-nano",
+    "family_id": "gpt-4.1",
+    "display_name": "GPT-4.1 nano",
+    "ticker_sync": "GPT-4.1-NANO",
+    "ticker_batch": "GPT-4.1-NANO.B",
+    "context_window": 1000000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-4o",
+    "family_id": "gpt-4o",
+    "display_name": "GPT-4o",
+    "ticker_sync": "GPT-4O",
+    "ticker_batch": "GPT-4O.B",
+    "context_window": 128000,
+    "launch_date": "2024-05-13",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-4o-mini",
+    "family_id": "gpt-4o",
+    "display_name": "GPT-4o mini",
+    "ticker_sync": "GPT-4O-MINI",
+    "ticker_batch": "GPT-4O-MINI.B",
+    "context_window": 128000,
+    "launch_date": "2024-07-18",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "o3",
+    "family_id": "o-series",
+    "display_name": "o3",
+    "ticker_sync": "O3",
+    "ticker_batch": null,
+    "context_window": 200000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "o4-mini",
+    "family_id": "o-series",
+    "display_name": "o4-mini",
+    "ticker_sync": "O4-MINI",
+    "ticker_batch": null,
+    "context_window": 200000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gemini-2.5-pro",
+    "family_id": "gemini-2.5",
+    "display_name": "Gemini 2.5 Pro",
+    "ticker_sync": "GEMINI-2.5-PRO",
+    "ticker_batch": "GEMINI-2.5-PRO.B",
+    "context_window": 1000000,
+    "launch_date": "2025-03-01",
+    "status": "active",
+    "tiers": [
+      { "tau_start": 0, "tau_end": 0.128, "alpha": 1.0 },
+      { "tau_start": 0.128, "tau_end": 1.0, "alpha": 2.0 }
+    ]
+  },
+  {
+    "model_id": "gemini-2.5-flash",
+    "family_id": "gemini-2.5",
+    "display_name": "Gemini 2.5 Flash",
+    "ticker_sync": "GEMINI-2.5-FLASH",
+    "ticker_batch": "GEMINI-2.5-FLASH.B",
+    "context_window": 1000000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [
+      { "tau_start": 0, "tau_end": 0.128, "alpha": 1.0 },
+      { "tau_start": 0.128, "tau_end": 1.0, "alpha": 2.0 }
+    ]
+  },
+  {
+    "model_id": "gemini-2.0-flash",
+    "family_id": "gemini-2.0",
+    "display_name": "Gemini 2.0 Flash",
+    "ticker_sync": "GEMINI-2.0-FLASH",
+    "ticker_batch": "GEMINI-2.0-FLASH.B",
+    "context_window": 1000000,
+    "launch_date": "2024-12-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "grok-3",
+    "family_id": "grok-3",
+    "display_name": "Grok 3",
+    "ticker_sync": "GROK-3",
+    "ticker_batch": null,
+    "context_window": 131072,
+    "launch_date": "2025-02-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "grok-3-mini",
+    "family_id": "grok-3",
+    "display_name": "Grok 3 mini",
+    "ticker_sync": "GROK-3-MINI",
+    "ticker_batch": null,
+    "context_window": 131072,
+    "launch_date": "2025-02-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "mistral-large",
+    "family_id": "mistral-large",
+    "display_name": "Mistral Large",
+    "ticker_sync": "MISTRAL-LARGE",
+    "ticker_batch": null,
+    "context_window": 128000,
+    "launch_date": "2024-02-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "deepseek-v3",
+    "family_id": "deepseek-v3",
+    "display_name": "DeepSeek V3",
+    "ticker_sync": "DEEPSEEK-V3",
+    "ticker_batch": null,
+    "context_window": 64000,
+    "launch_date": "2024-12-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "deepseek-r1",
+    "family_id": "deepseek-r1",
+    "display_name": "DeepSeek R1",
+    "ticker_sync": "DEEPSEEK-R1",
+    "ticker_batch": null,
+    "context_window": 64000,
+    "launch_date": "2025-01-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  }
+]

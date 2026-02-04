@@ -1,0 +1,112 @@
+[
+  {
+    "family_id": "claude-4",
+    "provider_id": "anthropic",
+    "display_name": "Claude 4",
+    "r_in": 0.20,
+    "r_cache": 0.022,
+    "r_think": 0.80,
+    "r_batch": 0.50,
+    "is_reasoning": true
+  },
+  {
+    "family_id": "claude-3.5",
+    "provider_id": "anthropic",
+    "display_name": "Claude 3.5",
+    "r_in": 0.20,
+    "r_cache": 0.025,
+    "r_think": null,
+    "r_batch": 0.50,
+    "is_reasoning": false
+  },
+  {
+    "family_id": "gpt-4.1",
+    "provider_id": "openai",
+    "display_name": "GPT-4.1",
+    "r_in": 0.25,
+    "r_cache": 0.0625,
+    "r_think": null,
+    "r_batch": 0.25,
+    "is_reasoning": false
+  },
+  {
+    "family_id": "gpt-4o",
+    "provider_id": "openai",
+    "display_name": "GPT-4o",
+    "r_in": 0.40,
+    "r_cache": 0.10,
+    "r_think": null,
+    "r_batch": 0.50,
+    "is_reasoning": false
+  },
+  {
+    "family_id": "o-series",
+    "provider_id": "openai",
+    "display_name": "o-series",
+    "r_in": 0.267,
+    "r_cache": 0.067,
+    "r_think": 0.60,
+    "r_batch": null,
+    "is_reasoning": true
+  },
+  {
+    "family_id": "gemini-2.5",
+    "provider_id": "google",
+    "display_name": "Gemini 2.5",
+    "r_in": 0.125,
+    "r_cache": 0.015,
+    "r_think": 0.75,
+    "r_batch": 0.25,
+    "is_reasoning": true
+  },
+  {
+    "family_id": "gemini-2.0",
+    "provider_id": "google",
+    "display_name": "Gemini 2.0",
+    "r_in": 0.25,
+    "r_cache": 0.025,
+    "r_think": null,
+    "r_batch": 0.25,
+    "is_reasoning": false
+  },
+  {
+    "family_id": "grok-3",
+    "provider_id": "xai",
+    "display_name": "Grok 3",
+    "r_in": 0.20,
+    "r_cache": 0.025,
+    "r_think": 0.50,
+    "r_batch": null,
+    "is_reasoning": true
+  },
+  {
+    "family_id": "mistral-large",
+    "provider_id": "mistral",
+    "display_name": "Mistral Large",
+    "r_in": 0.50,
+    "r_cache": 0.05,
+    "r_think": null,
+    "r_batch": null,
+    "is_reasoning": false
+  },
+  {
+    "family_id": "deepseek-v3",
+    "provider_id": "deepseek",
+    "display_name": "DeepSeek V3",
+    "r_in": 0.091,
+    "r_cache": 0.018,
+    "r_think": null,
+    "r_batch": null,
+    "is_reasoning": false
+  },
+  {
+    "family_id": "deepseek-r1",
+    "provider_id": "deepseek",
+    "display_name": "DeepSeek R1",
+    "r_in": 0.091,
+    "r_cache": 0.018,
+    "r_think": 0.50,
+    "r_batch": null,
+    "is_reasoning": true
+  }
+]

@@ -1,0 +1,258 @@
+[
+  {
+    "model_id": "opus-4.5",
+    "price_type": "sync",
+    "beta": 45.00,
+    "source": "seed:manual",
+    "observed_at": "2025-02-01T00:00:00Z",
+    "effective_from": "2025-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "opus-4.5",
+    "price_type": "batch",
+    "beta": 22.50,
+    "source": "seed:manual",
+    "observed_at": "2025-02-01T00:00:00Z",
+    "effective_from": "2025-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "sonnet-4",
+    "price_type": "sync",
+    "beta": 15.00,
+    "source": "seed:manual",
+    "observed_at": "2025-05-01T00:00:00Z",
+    "effective_from": "2025-05-01T00:00:00Z"
+  },
+  {
+    "model_id": "sonnet-4",
+    "price_type": "batch",
+    "beta": 7.50,
+    "source": "seed:manual",
+    "observed_at": "2025-05-01T00:00:00Z",
+    "effective_from": "2025-05-01T00:00:00Z"
+  },
+  {
+    "model_id": "sonnet-3.5",
+    "price_type": "sync",
+    "beta": 15.00,
+    "source": "seed:historical",
+    "observed_at": "2024-06-20T00:00:00Z",
+    "effective_from": "2024-06-20T00:00:00Z"
+  },
+  {
+    "model_id": "sonnet-3.5",
+    "price_type": "batch",
+    "beta": 7.50,
+    "source": "seed:historical",
+    "observed_at": "2024-06-20T00:00:00Z",
+    "effective_from": "2024-06-20T00:00:00Z"
+  },
+  {
+    "model_id": "haiku-3.5",
+    "price_type": "sync",
+    "beta": 4.00,
+    "source": "seed:historical",
+    "observed_at": "2024-10-01T00:00:00Z",
+    "effective_from": "2024-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "haiku-3.5",
+    "price_type": "batch",
+    "beta": 2.00,
+    "source": "seed:historical",
+    "observed_at": "2024-10-01T00:00:00Z",
+    "effective_from": "2024-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4.1",
+    "price_type": "sync",
+    "beta": 8.00,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4.1",
+    "price_type": "batch",
+    "beta": 2.00,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4.1-mini",
+    "price_type": "sync",
+    "beta": 1.60,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4.1-mini",
+    "price_type": "batch",
+    "beta": 0.40,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4.1-nano",
+    "price_type": "sync",
+    "beta": 0.40,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4.1-nano",
+    "price_type": "batch",
+    "beta": 0.10,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4o",
+    "price_type": "sync",
+    "beta": 15.00,
+    "source": "seed:historical",
+    "observed_at": "2024-05-13T00:00:00Z",
+    "effective_from": "2024-05-13T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4o",
+    "price_type": "sync",
+    "beta": 10.00,
+    "source": "seed:historical",
+    "observed_at": "2024-10-01T00:00:00Z",
+    "effective_from": "2024-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4o",
+    "price_type": "batch",
+    "beta": 5.00,
+    "source": "seed:historical",
+    "observed_at": "2024-10-01T00:00:00Z",
+    "effective_from": "2024-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4o-mini",
+    "price_type": "sync",
+    "beta": 0.60,
+    "source": "seed:historical",
+    "observed_at": "2024-07-18T00:00:00Z",
+    "effective_from": "2024-07-18T00:00:00Z"
+  },
+  {
+    "model_id": "gpt-4o-mini",
+    "price_type": "batch",
+    "beta": 0.30,
+    "source": "seed:historical",
+    "observed_at": "2024-07-18T00:00:00Z",
+    "effective_from": "2024-07-18T00:00:00Z"
+  },
+  {
+    "model_id": "o3",
+    "price_type": "sync",
+    "beta": 40.00,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "o4-mini",
+    "price_type": "sync",
+    "beta": 4.40,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.5-pro",
+    "price_type": "sync",
+    "beta": 10.00,
+    "source": "seed:manual",
+    "observed_at": "2025-03-01T00:00:00Z",
+    "effective_from": "2025-03-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.5-pro",
+    "price_type": "batch",
+    "beta": 2.50,
+    "source": "seed:manual",
+    "observed_at": "2025-03-01T00:00:00Z",
+    "effective_from": "2025-03-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.5-flash",
+    "price_type": "sync",
+    "beta": 0.30,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.5-flash",
+    "price_type": "batch",
+    "beta": 0.075,
+    "source": "seed:manual",
+    "observed_at": "2025-04-01T00:00:00Z",
+    "effective_from": "2025-04-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.0-flash",
+    "price_type": "sync",
+    "beta": 0.40,
+    "source": "seed:historical",
+    "observed_at": "2024-12-01T00:00:00Z",
+    "effective_from": "2024-12-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.0-flash",
+    "price_type": "batch",
+    "beta": 0.10,
+    "source": "seed:historical",
+    "observed_at": "2024-12-01T00:00:00Z",
+    "effective_from": "2024-12-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-3",
+    "price_type": "sync",
+    "beta": 10.00,
+    "source": "seed:manual",
+    "observed_at": "2025-02-01T00:00:00Z",
+    "effective_from": "2025-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-3-mini",
+    "price_type": "sync",
+    "beta": 1.00,
+    "source": "seed:manual",
+    "observed_at": "2025-02-01T00:00:00Z",
+    "effective_from": "2025-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "mistral-large",
+    "price_type": "sync",
+    "beta": 12.00,
+    "source": "seed:manual",
+    "observed_at": "2024-02-01T00:00:00Z",
+    "effective_from": "2024-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "deepseek-v3",
+    "price_type": "sync",
+    "beta": 1.10,
+    "source": "seed:manual",
+    "observed_at": "2024-12-01T00:00:00Z",
+    "effective_from": "2024-12-01T00:00:00Z"
+  },
+  {
+    "model_id": "deepseek-r1",
+    "price_type": "sync",
+    "beta": 2.19,
+    "source": "seed:manual",
+    "observed_at": "2025-01-01T00:00:00Z",
+    "effective_from": "2025-01-01T00:00:00Z"
+  }
+]

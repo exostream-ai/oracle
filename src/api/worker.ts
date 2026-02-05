@@ -654,26 +654,114 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal server error', message: err.message }, 500);
 });
 
-// Scheduled event handler for cron triggers
-async function scheduled(event: ScheduledEvent, env: any, ctx: ExecutionContext) {
-  console.log(`[Cron] Scheduled scraper run triggered at ${new Date().toISOString()}`);
+// Browser-like headers for scraping
+const SCRAPER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Cache-Control': 'no-cache',
+};
 
-  // List of providers to scrape
-  const providers = ['anthropic', 'openai', 'google', 'xai', 'mistral', 'deepseek'];
+// Scraper configurations
+const SCRAPER_CONFIGS = [
+  {
+    provider: 'anthropic',
+    url: 'https://www.anthropic.com/pricing',
+    // Anthropic has clean HTML, prices are usually in text
+  },
+  {
+    provider: 'google',
+    url: 'https://ai.google.dev/pricing',
+  },
+  {
+    provider: 'mistral',
+    url: 'https://mistral.ai/products/la-plateforme#pricing',
+  },
+  {
+    provider: 'deepseek',
+    url: 'https://api-docs.deepseek.com/quick_start/pricing',
+  },
+  {
+    provider: 'xai',
+    url: 'https://docs.x.ai/docs/models#models-and-pricing',
+  },
+  {
+    provider: 'openai',
+    url: 'https://openai.com/api/pricing',
+    // OpenAI often blocks scrapers, will likely get 403
+  },
+];
 
-  for (const provider of providers) {
+// Run all scrapers
+async function runAllScrapers(): Promise<{ provider: string; status: string; error?: string }[]> {
+  const results: { provider: string; status: string; error?: string }[] = [];
+
+  for (const config of SCRAPER_CONFIGS) {
     try {
-      // For now, log the intended scrape
-      // Full scraper implementation requires either:
-      // 1. Workers-compatible HTML parsing (no Cheerio)
-      // 2. Calling an external scraper service
-      console.log(`[Cron] Would scrape ${provider} pricing page`);
+      const response = await fetch(config.url, {
+        headers: SCRAPER_HEADERS,
+      });
+
+      if (!response.ok) {
+        results.push({
+          provider: config.provider,
+          status: 'error',
+          error: `HTTP ${response.status}`,
+        });
+        continue;
+      }
+
+      const html = await response.text();
+      const contentLength = html.length;
+
+      // For now, just verify we can fetch the page
+      // Full parsing would extract prices from HTML
+      // This requires provider-specific regex patterns since we can't use Cheerio
+
+      results.push({
+        provider: config.provider,
+        status: 'success',
+        error: undefined,
+      });
+
+      console.log(`[Scraper] ${config.provider}: fetched ${contentLength} bytes`);
+
     } catch (error) {
-      console.error(`[Cron] Error scraping ${provider}:`, error);
+      results.push({
+        provider: config.provider,
+        status: 'error',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
-  console.log(`[Cron] Scheduled run complete`);
+  return results;
+}
+
+// Scheduled event handler for cron triggers
+async function scheduled(event: ScheduledEvent, env: any, ctx: ExecutionContext) {
+  const startTime = Date.now();
+  console.log(`[Cron] Scheduled scraper run triggered at ${new Date().toISOString()}`);
+
+  try {
+    const results = await runAllScrapers();
+
+    const successful = results.filter(r => r.status === 'success').length;
+    const failed = results.filter(r => r.status === 'error').length;
+
+    console.log(`[Cron] Scraper run complete: ${successful} succeeded, ${failed} failed`);
+
+    for (const result of results) {
+      if (result.status === 'error') {
+        console.log(`[Cron] ${result.provider}: ${result.error}`);
+      }
+    }
+  } catch (error) {
+    console.error(`[Cron] Fatal error in scheduled run:`, error);
+  }
+
+  const duration = Date.now() - startTime;
+  console.log(`[Cron] Total duration: ${duration}ms`);
 }
 
 // Export for Cloudflare Workers

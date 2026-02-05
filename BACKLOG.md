@@ -54,4 +54,4 @@
 - [x] θ and σ showing dummy identical values across all models — fixed, now computed from historical data
 - [x] Chart x-axis rendering 1970 epoch dates — fixed, history endpoint now includes lineage data
 - [x] Gemini 2.5 Flash showing minor r_in/r_cache discrepancy vs live pricing — Fixed: separated into gemini-2.5-pro and gemini-2.5-flash families with correct ratios (Flash r_in=0.25, Pro r_in=0.125)
-- [ ] Cloudflare Cron Triggers require workers.dev subdomain — Manual action: Go to Cloudflare Dashboard → Workers & Pages → Create workers.dev subdomain, then redeploy
+- [x] Cloudflare Cron Triggers require workers.dev subdomain — Resolved: workers.dev subdomain created, cron trigger active (runs hourly at minute 0)

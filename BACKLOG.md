@@ -12,11 +12,11 @@
 
 ## High Priority (ship within first week)
 
-- [ ] MCP server distribution — publish @exostream/mcp to npm, submit to mcp.so and Smithery
-- [ ] Use cases page — /use-cases with sections for AI Engineers, Finance/Procurement, LLM Tooling Platforms, AI Analysts/Investors, Agentic Systems
+- [ ] MCP server distribution — publish @exostream/mcp to npm, submit to mcp.so and Smithery. Server exists at src/mcp/ with 4 tools.
+- [x] Use cases page — /use-cases complete with all 5 sections: AI Engineers, Finance/Procurement, LLM Tooling Platforms, AI Analysts/Investors, Agentic Systems
 - [ ] Model coverage gap — check if xAI has shipped Grok 4.x models since seed data was created. Add any missing models across all providers
 - [ ] Embeddable widget — small iframe/React component showing live ticker for a single model. Bloggers and docs sites can embed it. Every embed is a backlink
-- [ ] API key system — even though launch is free, set up optional API keys for tracking usage and future rate limit tiers
+- [ ] API key system — even though launch is free, set up optional API keys for tracking usage and future rate limit tiers (requires Cloudflare KV/D1)
 
 ## GTM & Launch (do after deployment)
 

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { formatPrice, formatTheta, formatPercent, formatNumber, type GreekData } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { type GreekData } from '@/lib/api';
 
 interface TickerBoardProps {
   models: GreekData[];
@@ -10,7 +11,24 @@ interface TickerBoardProps {
 
 type SortKey = 'ticker' | 'provider' | 'beta_sync' | 'beta_batch' | 'r_in' | 'theta' | 'sigma' | 'forward';
 
+function formatPrice(price?: number): string {
+  if (price === undefined) return '-';
+  return `$${price.toFixed(2)}`;
+}
+
+function formatTheta(theta?: number): string {
+  if (theta === undefined) return '-';
+  const pct = Math.abs(theta * 100).toFixed(1);
+  return theta > 0 ? `-${pct}%` : `+${pct}%`;
+}
+
+function formatContext(w: number): string {
+  if (w >= 1000000) return `${(w / 1000000).toFixed(1)}M`;
+  return `${(w / 1000).toFixed(0)}K`;
+}
+
 export default function TickerBoard({ models, loading }: TickerBoardProps) {
+  const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>('beta_sync');
   const [sortAsc, setSortAsc] = useState(true);
 
@@ -57,7 +75,6 @@ export default function TickerBoard({ models, loading }: TickerBoardProps) {
         bVal = b.sigma ?? 0;
         break;
       case 'forward':
-        // 3M forward approximation
         aVal = (a.beta_sync ?? 0) * Math.exp(-(a.theta ?? 0) * 3);
         bVal = (b.beta_sync ?? 0) * Math.exp(-(b.theta ?? 0) * 3);
         break;
@@ -66,28 +83,27 @@ export default function TickerBoard({ models, loading }: TickerBoardProps) {
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     }
-
     return sortAsc ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
   });
 
-  const SortHeader = ({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) => (
+  const SortHeader = ({ label, keyName }: { label: string; keyName: SortKey }) => (
     <th
-      onClick={() => handleSort(sortKeyName)}
-      className={`cursor-pointer hover:text-text-primary ${sortKey === sortKeyName ? 'text-accent' : ''}`}
+      onClick={() => handleSort(keyName)}
+      className={sortKey === keyName ? 'sorted' : ''}
     >
       {label}
-      {sortKey === sortKeyName && (
-        <span className="ml-1">{sortAsc ? '↑' : '↓'}</span>
+      {sortKey === keyName && (
+        <span className="ml-1 text-[10px]">{sortAsc ? '▲' : '▼'}</span>
       )}
     </th>
   );
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="animate-pulse space-y-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-10 bg-surface-light rounded" />
+      <div className="terminal-box">
+        <div className="p-4 space-y-3">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-8 bg-[#1a1a1a] loading-pulse" />
           ))}
         </div>
       </div>
@@ -95,19 +111,19 @@ export default function TickerBoard({ models, loading }: TickerBoardProps) {
   }
 
   return (
-    <div className="card overflow-x-auto">
+    <div className="terminal-box overflow-x-auto">
       <table className="data-table">
         <thead>
           <tr>
-            <SortHeader label="Ticker" sortKeyName="ticker" />
-            <SortHeader label="Provider" sortKeyName="provider" />
-            <SortHeader label="β (Sync)" sortKeyName="beta_sync" />
-            <SortHeader label="β (Batch)" sortKeyName="beta_batch" />
-            <SortHeader label="r_in" sortKeyName="r_in" />
-            <SortHeader label="θ" sortKeyName="theta" />
-            <SortHeader label="σ" sortKeyName="sigma" />
-            <SortHeader label="3M Forward" sortKeyName="forward" />
-            <th>Context</th>
+            <SortHeader label="Ticker" keyName="ticker" />
+            <SortHeader label="Provider" keyName="provider" />
+            <SortHeader label="β (sync)" keyName="beta_sync" />
+            <SortHeader label="β (batch)" keyName="beta_batch" />
+            <SortHeader label="r_in" keyName="r_in" />
+            <SortHeader label="θ" keyName="theta" />
+            <SortHeader label="σ" keyName="sigma" />
+            <SortHeader label="3M Fwd" keyName="forward" />
+            <th>W</th>
           </tr>
         </thead>
         <tbody>
@@ -117,29 +133,25 @@ export default function TickerBoard({ models, loading }: TickerBoardProps) {
               : undefined;
 
             return (
-              <tr key={model.model_id}>
+              <tr
+                key={model.model_id}
+                onClick={() => router.push(`/model/${model.model_id}`)}
+              >
                 <td>
-                  <a
-                    href={`/model/${model.model_id}`}
-                    className="text-accent hover:underline font-semibold"
-                  >
-                    {model.ticker}
-                  </a>
+                  <span className="text-[#06b6d4] font-medium">{model.ticker}</span>
                 </td>
-                <td className="text-text-secondary">{model.provider}</td>
-                <td>{formatPrice(model.beta_sync)}/M</td>
-                <td className="text-text-secondary">
-                  {model.beta_batch ? `${formatPrice(model.beta_batch)}/M` : '-'}
-                </td>
-                <td className="text-text-secondary">{model.r_in.toFixed(3)}</td>
-                <td className={model.theta && model.theta > 0 ? 'text-negative' : 'text-positive'}>
+                <td className="text-[#737373]">{model.provider}</td>
+                <td>{formatPrice(model.beta_sync)}</td>
+                <td className="text-[#737373]">{formatPrice(model.beta_batch)}</td>
+                <td className="text-[#737373]">{model.r_in.toFixed(3)}</td>
+                <td className={model.theta && model.theta > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}>
                   {formatTheta(model.theta)}
                 </td>
-                <td className="text-text-secondary">
+                <td className="text-[#737373]">
                   {model.sigma !== undefined ? `${(model.sigma * 100).toFixed(1)}%` : '-'}
                 </td>
-                <td>{forward3m !== undefined ? formatPrice(forward3m) : '-'}</td>
-                <td className="text-text-secondary">{formatNumber(model.context_window)}</td>
+                <td>{formatPrice(forward3m)}</td>
+                <td className="text-[#737373]">{formatContext(model.context_window)}</td>
               </tr>
             );
           })}

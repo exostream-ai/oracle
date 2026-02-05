@@ -50,11 +50,21 @@
     "is_reasoning": true
   },
   {
-    "family_id": "gemini-2.5",
+    "family_id": "gemini-2.5-pro",
     "provider_id": "google",
-    "display_name": "Gemini 2.5",
+    "display_name": "Gemini 2.5 Pro",
     "r_in": 0.125,
     "r_cache": 0.015,
+    "r_think": 0.75,
+    "r_batch": 0.25,
+    "is_reasoning": true
+  },
+  {
+    "family_id": "gemini-2.5-flash",
+    "provider_id": "google",
+    "display_name": "Gemini 2.5 Flash",
+    "r_in": 0.25,
+    "r_cache": 0.01875,
     "r_think": 0.75,
     "r_batch": 0.25,
     "is_reasoning": true

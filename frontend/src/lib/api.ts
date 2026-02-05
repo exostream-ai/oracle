@@ -2,7 +2,7 @@
  * Exostream API client
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.exostream.ai';
 
 export interface SpotData {
   ticker: string;
@@ -145,7 +145,7 @@ export async function priceTask(params: {
   n_think?: number;
   eta?: number;
   horizon_months?: number;
-}): Promise<ApiResponse<{ data: PriceResult }>> {
+}): Promise<ApiResponse<PriceResult>> {
   return fetcher('/v1/price', {
     method: 'POST',
     body: JSON.stringify(params),

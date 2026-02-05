@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { createChart, IChartApi, ISeriesApi, LineData } from 'lightweight-charts';
+import { createChart, IChartApi, Time } from 'lightweight-charts';
 
 interface PricePoint {
   beta: number;
@@ -14,6 +14,12 @@ interface HistoryChartProps {
   ticker: string;
 }
 
+// Convert timestamp to YYYY-MM-DD string format for lightweight-charts
+function toDateString(timestamp: string): string {
+  const date = new Date(timestamp);
+  return date.toISOString().split('T')[0];
+}
+
 export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -21,25 +27,24 @@ export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
   useEffect(() => {
     if (!chartContainerRef.current || prices.length === 0) return;
 
-    // Create chart
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { color: '#141414' },
         textColor: '#737373',
       },
       grid: {
-        vertLines: { color: '#262626' },
-        horzLines: { color: '#262626' },
+        vertLines: { color: '#1a1a1a' },
+        horzLines: { color: '#1a1a1a' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 300,
+      height: 280,
       rightPriceScale: {
         borderColor: '#262626',
       },
       timeScale: {
         borderColor: '#262626',
-        timeVisible: true,
-        secondsVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
       },
       crosshair: {
         horzLine: {
@@ -55,7 +60,6 @@ export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
 
     chartRef.current = chart;
 
-    // Create line series
     const series = chart.addLineSeries({
       color: '#06b6d4',
       lineWidth: 2,
@@ -66,21 +70,36 @@ export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
       },
     });
 
-    // Convert prices to chart data
-    const data: LineData[] = prices.map(p => ({
-      time: Math.floor(new Date(p.timestamp).getTime() / 1000) as any,
-      value: p.beta,
-    }));
+    // Deduplicate by date string (YYYY-MM-DD) and sort
+    const dateMap = new Map<string, number>();
+    for (const p of prices) {
+      const dateStr = toDateString(p.timestamp);
+      // Keep the latest value for each date
+      dateMap.set(dateStr, p.beta);
+    }
 
-    series.setData(data);
+    const data = Array.from(dateMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([time, value]) => ({ time: time as Time, value }));
 
-    // Add markers for reconstructed vs live data
-    const markers = prices
-      .filter(p => p.provenance === 'reconstructed')
-      .map(p => ({
-        time: Math.floor(new Date(p.timestamp).getTime() / 1000) as any,
+    if (data.length > 0) {
+      series.setData(data);
+    }
+
+    // Mark reconstructed data points
+    const reconstructedDates = new Set<string>();
+    for (const p of prices) {
+      if (p.provenance === 'reconstructed') {
+        reconstructedDates.add(toDateString(p.timestamp));
+      }
+    }
+
+    const markers = Array.from(reconstructedDates)
+      .sort((a, b) => a.localeCompare(b))
+      .map(time => ({
+        time: time as Time,
         position: 'belowBar' as const,
-        color: '#737373',
+        color: '#525252',
         shape: 'circle' as const,
         text: '',
       }));
@@ -89,7 +108,8 @@ export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
       series.setMarkers(markers);
     }
 
-    // Handle resize
+    chart.timeScale().fitContent();
+
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
         chartRef.current.applyOptions({
@@ -99,7 +119,6 @@ export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
     };
 
     window.addEventListener('resize', handleResize);
-
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
@@ -107,12 +126,14 @@ export default function HistoryChart({ prices, ticker }: HistoryChartProps) {
   }, [prices]);
 
   return (
-    <div className="chart-container">
-      <div className="p-4 border-b border-border">
-        <h3 className="text-lg font-semibold">{ticker} Price History</h3>
-        <p className="text-text-secondary text-sm">
-          ○ Reconstructed • ● Live observations
-        </p>
+    <div className="terminal-box">
+      <div className="p-4 border-b border-[#262626]">
+        <div className="flex items-center justify-between">
+          <h3 className="mono text-sm text-[#e5e5e5]">{ticker} Price History</h3>
+          <span className="mono text-xs text-[#525252]">
+            o reconstructed
+          </span>
+        </div>
       </div>
       <div ref={chartContainerRef} />
     </div>

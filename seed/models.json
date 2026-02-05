@@ -122,7 +122,7 @@
   },
   {
     "model_id": "gemini-2.5-pro",
-    "family_id": "gemini-2.5",
+    "family_id": "gemini-2.5-pro",
     "display_name": "Gemini 2.5 Pro",
     "ticker_sync": "GEMINI-2.5-PRO",
     "ticker_batch": "GEMINI-2.5-PRO.B",
@@ -136,7 +136,7 @@
   },
   {
     "model_id": "gemini-2.5-flash",
-    "family_id": "gemini-2.5",
+    "family_id": "gemini-2.5-flash",
     "display_name": "Gemini 2.5 Flash",
     "ticker_sync": "GEMINI-2.5-FLASH",
     "ticker_batch": "GEMINI-2.5-FLASH.B",

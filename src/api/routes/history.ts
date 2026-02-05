@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { getClientOrNull } from '@/db/client.js';
-import { getModelByTicker, getCacheAge, getOracleTimestamp } from '../oracle.js';
+import { getModelByTicker, getCacheAge, getOracleTimestamp, getHistoricalPrices } from '../oracle.js';
 
 const history = new Hono();
 
@@ -28,11 +28,16 @@ history.get('/:ticker', async (c) => {
 
   const sql = getClientOrNull();
   if (!sql) {
+    // Load from seed data
+    const seedPrices = await getHistoricalPrices(model.modelId, priceType);
     return c.json({
       data: {
         ticker,
         model_id: model.modelId,
-        prices: [],
+        display_name: model.displayName,
+        price_type: priceType,
+        prices: seedPrices,
+        count: seedPrices.length,
       },
       oracle_timestamp: getOracleTimestamp().toISOString(),
       cache_age_seconds: getCacheAge(),

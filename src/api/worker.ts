@@ -101,6 +101,10 @@ const familyLineage: Record<string, string[]> = {
   'mistral-large': ['mistral-large'],
   'deepseek-v3': ['deepseek-v3'],
   'deepseek-r1': ['deepseek-r1'],
+  'gpt-5': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1', 'gpt-5', 'gpt-5.1', 'gpt-5.2'],
+  'grok-4.1-fast': ['grok-3-mini', 'grok-4-fast', 'grok-4.1-fast'],
+  'gemini-3-pro': ['gemini-1.5-pro', 'gemini-2.5-pro', 'gemini-3-pro'],
+  'gemini-3-flash': ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-3-flash'],
 };
 
 function getDefaultTheta(familyId: string): number {
@@ -117,6 +121,10 @@ function getDefaultTheta(familyId: string): number {
     'mistral-large': 0.12,
     'deepseek-v3': 0.02,
     'deepseek-r1': 0.03,
+    'gpt-5': 0.06,
+    'grok-4.1-fast': 0.04,
+    'gemini-3-pro': 0.06,
+    'gemini-3-flash': 0.06,
   };
   return defaults[familyId] ?? 0.05;
 }
@@ -135,6 +143,10 @@ function getDefaultSigma(familyId: string): number {
     'mistral-large': 0.15,
     'deepseek-v3': 0.03,
     'deepseek-r1': 0.04,
+    'gpt-5': 0.10,
+    'grok-4.1-fast': 0.06,
+    'gemini-3-pro': 0.08,
+    'gemini-3-flash': 0.08,
   };
   return defaults[familyId] ?? 0.06;
 }

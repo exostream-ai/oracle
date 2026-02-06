@@ -4,7 +4,6 @@ import '@/styles/globals.css';
 export const metadata: Metadata = {
   title: 'Exostream - The Pricing Oracle for LLM Inference',
   description: 'Canonical price feeds, forward curves, and Greek sheets for the cost of intelligence.',
-  keywords: ['LLM', 'pricing', 'AI', 'inference', 'oracle', 'GPT', 'Claude', 'Gemini'],
 };
 
 export default function RootLayout({
@@ -14,45 +13,51 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-background text-text-primary min-h-screen">
-        <nav className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14">
-              <a href="/" className="flex items-center gap-2">
-                <img src="/logo.png" alt="Exostream" className="h-8 w-auto" />
-                <span className="font-semibold text-lg">Exostream</span>
+      <body className="min-h-screen flex flex-col">
+        {/* Header - logo left, nav right */}
+        <header className="border-b border-[#262626] bg-[#0a0a0a]">
+          <div className="max-w-[1400px] mx-auto px-4 h-12 flex items-center justify-between">
+            <a href="/" className="flex items-center">
+              <span className="mono text-lg font-semibold">
+                <span className="text-[#e5e5e5]">exo</span>
+                <span className="text-[#06b6d4]">stream</span>
+              </span>
+            </a>
+            <nav className="flex items-center gap-6">
+              <a href="/#calculator" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
+                Calculator
               </a>
-              <div className="flex items-center gap-6">
-                <a href="/" className="text-text-secondary hover:text-text-primary text-sm">
-                  Dashboard
-                </a>
-                <a href="/calculator" className="text-text-secondary hover:text-text-primary text-sm">
-                  Calculator
-                </a>
-                <a href="/methodology" className="text-text-secondary hover:text-text-primary text-sm">
-                  Methodology
-                </a>
-                <a href="/api-docs" className="text-text-secondary hover:text-text-primary text-sm">
-                  API
-                </a>
-              </div>
-            </div>
+              <a href="/canvas" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
+                Canvas
+              </a>
+              <a href="/use-cases" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
+                Use Cases
+              </a>
+              <a href="/methodology" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
+                Methodology
+              </a>
+              <a href="/api-docs" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
+                API
+              </a>
+            </nav>
           </div>
-        </nav>
-        <main>{children}</main>
-        <footer className="border-t border-border mt-auto py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between text-sm text-text-secondary">
-              <div className="flex items-center gap-6">
-                <a href="/api-docs" className="hover:text-text-primary">API Docs</a>
-                <a href="/methodology" className="hover:text-text-primary">Methodology</a>
-                <a href="https://x.com/exostream" className="hover:text-text-primary" target="_blank" rel="noopener">
-                  @exostream
-                </a>
-              </div>
-              <div>
-                Built by the team behind Syngraph
-              </div>
+        </header>
+
+        <main className="flex-1">{children}</main>
+
+        {/* Footer - minimal */}
+        <footer className="border-t border-[#262626] py-3 mt-auto">
+          <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
+            <div className="flex items-center gap-6 text-xs text-[#737373] mono">
+              <a href="/use-cases" className="hover:text-[#e5e5e5]">Use Cases</a>
+              <a href="/api-docs" className="hover:text-[#e5e5e5]">API Docs</a>
+              <a href="/methodology" className="hover:text-[#e5e5e5]">Methodology</a>
+              <a href="https://x.com/exostream" target="_blank" rel="noopener" className="hover:text-[#e5e5e5]">
+                @exostream
+              </a>
+            </div>
+            <div className="text-xs text-[#525252]">
+              Built by the team behind Syngraph
             </div>
           </div>
         </footer>

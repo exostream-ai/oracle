@@ -249,5 +249,85 @@
     "launch_date": "2025-01-01",
     "status": "active",
     "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-5",
+    "family_id": "gpt-5",
+    "display_name": "GPT-5",
+    "ticker_sync": "GPT-5",
+    "ticker_batch": "GPT-5.B",
+    "context_window": 400000,
+    "launch_date": "2025-08-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-5.1",
+    "family_id": "gpt-5",
+    "display_name": "GPT-5.1",
+    "ticker_sync": "GPT-5.1",
+    "ticker_batch": "GPT-5.1.B",
+    "context_window": 400000,
+    "launch_date": "2025-11-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-5.2",
+    "family_id": "gpt-5",
+    "display_name": "GPT-5.2",
+    "ticker_sync": "GPT-5.2",
+    "ticker_batch": "GPT-5.2.B",
+    "context_window": 400000,
+    "launch_date": "2026-01-15",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gpt-5-mini",
+    "family_id": "gpt-5",
+    "display_name": "GPT-5 mini",
+    "ticker_sync": "GPT-5-MINI",
+    "ticker_batch": "GPT-5-MINI.B",
+    "context_window": 400000,
+    "launch_date": "2025-09-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "grok-4.1-fast",
+    "family_id": "grok-4.1-fast",
+    "display_name": "Grok 4.1 Fast",
+    "ticker_sync": "GROK-4.1-FAST",
+    "ticker_batch": null,
+    "context_window": 2000000,
+    "launch_date": "2025-12-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "gemini-3-pro",
+    "family_id": "gemini-3-pro",
+    "display_name": "Gemini 3 Pro",
+    "ticker_sync": "GEMINI-3-PRO",
+    "ticker_batch": "GEMINI-3-PRO.B",
+    "context_window": 1000000,
+    "launch_date": "2026-01-01",
+    "status": "active",
+    "tiers": [
+      { "tau_start": 0, "tau_end": 0.2, "alpha": 1.0 },
+      { "tau_start": 0.2, "tau_end": 1.0, "alpha": 2.0 }
+    ]
+  },
+  {
+    "model_id": "gemini-3-flash",
+    "family_id": "gemini-3-flash",
+    "display_name": "Gemini 3 Flash",
+    "ticker_sync": "GEMINI-3-FLASH",
+    "ticker_batch": "GEMINI-3-FLASH.B",
+    "context_window": 1000000,
+    "launch_date": "2026-01-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
   }
 ]

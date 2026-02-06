@@ -56,169 +56,10 @@ interface SeedPrice {
 // Context tiers cache for seed data
 const seedContextTiers = new Map<string, ContextTier[]>();
 
-// Family lineage mapping for theta computation
-// Maps current model families to their predecessor families for price history
-// Only include direct lineage where price decreases are expected
-const familyLineage: Record<string, string[]> = {
-  'gpt-4.1': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1'],  // Clear $60→$8 history
-  'gpt-4o': ['gpt-4o'],  // Only GPT-4o itself (has $15→$10 drop)
-  'o-series': ['o-series'],  // New, use defaults
-  'claude-4': ['claude-3-opus', 'opus-4.5', 'opus-4.6'],  // $75→$45→$25 decline
-  'claude-3.5': ['claude-3.5', 'sonnet-3.5', 'sonnet-4'],
-  'gemini-2.5-pro': ['gemini-2.5-pro'],  // Separate from Flash
-  'gemini-2.5-flash': ['gemini-2.5-flash'],  // Separate from Pro
-  'gemini-2.0': ['gemini-2.0'],
-  'grok-4': ['grok-3', 'grok-4'],
-  'grok-4-fast': ['grok-3-mini', 'grok-4-fast'],
-  'grok-3': ['grok-3'],
-  'mistral-large': ['mistral-large'],  // Has $24→$12 history
-  'deepseek-v3': ['deepseek-v3'],
-  'deepseek-r1': ['deepseek-r1'],
-  'gpt-5': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1', 'gpt-5', 'gpt-5.1', 'gpt-5.2'],
-  'grok-4.1-fast': ['grok-3-mini', 'grok-4-fast', 'grok-4.1-fast'],
-  'gemini-3-pro': ['gemini-1.5-pro', 'gemini-2.5-pro', 'gemini-3-pro'],
-  'gemini-3-flash': ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-3-flash'],
-};
+// Family lineage and theta/sigma defaults from single source of truth
+import { FAMILY_LINEAGE as familyLineage, computeThetaFromHistory } from '../core/constants.js';
 
-/**
- * Compute theta from price history using log returns
- */
-function computeThetaFromHistory(
-  prices: SeedPrice[],
-  familyId: string,
-  modelId: string
-): { theta: number; sigma: number } {
-  // Get lineage models to include in history
-  const lineageModels = familyLineage[familyId] || [familyId];
 
-  // Collect all sync prices for the lineage, sorted by date
-  // IMPORTANT: Only include prices that are from the SAME tier of model
-  // (i.e., flagship models, not mixing Pro and Flash prices)
-  const relevantPrices = prices
-    .filter(p => {
-      if (p.price_type !== 'sync') return false;
-      // Check if model_id matches any lineage pattern exactly or with version suffix
-      return lineageModels.some(lm => {
-        // Match exact model_id or versioned variants (e.g., gpt-4, gpt-4-turbo)
-        // But NOT different model tiers (e.g., don't mix Pro and Flash)
-        if (p.model_id === lm) return true;
-        if (p.model_id.startsWith(lm + '-') && !p.model_id.includes('mini') && !p.model_id.includes('flash') && !p.model_id.includes('nano')) {
-          return true;
-        }
-        return false;
-      });
-    })
-    .sort((a, b) => new Date(a.observed_at).getTime() - new Date(b.observed_at).getTime());
-
-  // Need at least 2 data points to compute theta
-  if (relevantPrices.length < 2) {
-    return { theta: getDefaultTheta(familyId), sigma: getDefaultSigma(familyId) };
-  }
-
-  // Compute log returns between consecutive observations
-  const logReturns: number[] = [];
-  const timeDeltas: number[] = []; // in months
-
-  for (let i = 1; i < relevantPrices.length; i++) {
-    const prevPrice = relevantPrices[i - 1].beta;
-    const currPrice = relevantPrices[i].beta;
-    const prevDate = new Date(relevantPrices[i - 1].observed_at);
-    const currDate = new Date(relevantPrices[i].observed_at);
-
-    // Time difference in months
-    const dtMonths = (currDate.getTime() - prevDate.getTime()) / (30.44 * 24 * 60 * 60 * 1000);
-
-    if (dtMonths > 0.5 && prevPrice > 0 && currPrice > 0) { // At least ~2 weeks between observations
-      const logReturn = Math.log(currPrice / prevPrice);
-      logReturns.push(logReturn);
-      timeDeltas.push(dtMonths);
-    }
-  }
-
-  if (logReturns.length === 0) {
-    return { theta: getDefaultTheta(familyId), sigma: getDefaultSigma(familyId) };
-  }
-
-  // Compute theta: weighted average of -logReturn / dt (newer observations weighted more)
-  const lambda = 0.85;
-  let weightedTheta = 0;
-  let totalWeight = 0;
-
-  for (let i = 0; i < logReturns.length; i++) {
-    const weight = Math.pow(lambda, logReturns.length - 1 - i);
-    const thetaObs = -logReturns[i] / timeDeltas[i];
-    weightedTheta += weight * thetaObs;
-    totalWeight += weight;
-  }
-
-  let theta = weightedTheta / totalWeight;
-
-  // Clamp theta to reasonable range (1% to 15% per month)
-  theta = Math.max(0.01, Math.min(0.15, theta));
-
-  // Compute sigma: standard deviation of monthly log returns
-  const monthlyReturns = logReturns.map((lr, i) => lr / timeDeltas[i]); // normalize to monthly
-  const mean = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length;
-  const variance = monthlyReturns.reduce((a, r) => a + Math.pow(r - mean, 2), 0) / monthlyReturns.length;
-  let sigma = Math.sqrt(variance);
-
-  // Clamp sigma to reasonable range (2% to 25% per month)
-  sigma = Math.max(0.02, Math.min(0.25, sigma));
-
-  return { theta, sigma };
-}
-
-/**
- * Default theta values by family
- * Based on historical price trends in the LLM market
- */
-function getDefaultTheta(familyId: string): number {
-  const defaults: Record<string, number> = {
-    'gpt-4.1': 0.08,      // GPT-4 family has aggressive decay: $60→$8 over 25mo
-    'gpt-4o': 0.07,       // GPT-4o: $15→$10 over 5mo
-    'o-series': 0.04,     // Reasoning models - newer, less history
-    'claude-4': 0.05,     // Claude Opus: $75→$45 over 11mo
-    'claude-3.5': 0.02,   // Sonnet stable since launch
-    'gemini-2.5-pro': 0.06,   // Google tends to be aggressive on pricing
-    'gemini-2.5-flash': 0.06,
-    'gemini-2.0': 0.05,
-    'grok-3': 0.03,       // New, less history
-    'mistral-large': 0.12, // Aggressive: $24→$12 over 5mo
-    'deepseek-v3': 0.02,  // Already very cheap
-    'deepseek-r1': 0.03,
-    'gpt-5': 0.06,           // Continuation of GPT price decline
-    'grok-4.1-fast': 0.04,   // xAI Fast tier, steady pricing
-    'gemini-3-pro': 0.06,    // Google aggressive pricing trend
-    'gemini-3-flash': 0.06,  // Google Flash tier
-  };
-  return defaults[familyId] ?? 0.05;
-}
-
-/**
- * Default sigma values by family
- * Monthly price volatility
- */
-function getDefaultSigma(familyId: string): number {
-  const defaults: Record<string, number> = {
-    'gpt-4.1': 0.12,      // Moderate volatility
-    'gpt-4o': 0.10,
-    'o-series': 0.06,
-    'claude-4': 0.08,
-    'claude-3.5': 0.04,
-    'gemini-2.5-pro': 0.08,
-    'gemini-2.5-flash': 0.08,
-    'gemini-2.0': 0.06,
-    'grok-3': 0.05,
-    'mistral-large': 0.15, // Higher volatility due to repricing
-    'deepseek-v3': 0.03,
-    'deepseek-r1': 0.04,
-    'gpt-5': 0.10,           // Higher vol from rapid iteration
-    'grok-4.1-fast': 0.06,
-    'gemini-3-pro': 0.08,
-    'gemini-3-flash': 0.08,
-  };
-  return defaults[familyId] ?? 0.06;
-}
 
 /**
  * Load data from seed JSON files
@@ -269,7 +110,7 @@ function loadFromSeed(): OracleState {
     const betaBatch = betaBatchEntry?.beta;
 
     // Compute theta and sigma from historical data
-    const { theta, sigma } = computeThetaFromHistory(prices, model.family_id, model.model_id);
+    const { theta, sigma } = computeThetaFromHistory(prices, model.family_id);
 
     // Store context tiers
     seedContextTiers.set(
@@ -516,8 +357,9 @@ export function getOracleTimestamp(): Date {
   return oracleState?.lastUpdate ?? new Date();
 }
 
-// Cached seed prices for history endpoint
+// Cached seed data for history endpoint
 let cachedSeedPrices: SeedPrice[] | null = null;
+let cachedModelFamilies: Map<string, string> | null = null;
 
 /**
  * Get historical prices from seed data
@@ -526,11 +368,17 @@ export async function getHistoricalPrices(
   modelId: string,
   priceType: 'sync' | 'batch'
 ): Promise<Array<{ beta: number; timestamp: string; source: string; provenance: string }>> {
+  const seedDir = join(__dirname, '../../seed');
   if (!cachedSeedPrices) {
-    const seedDir = join(__dirname, '../../seed');
     cachedSeedPrices = JSON.parse(
       readFileSync(join(seedDir, 'historical_prices.json'), 'utf-8')
     );
+  }
+  if (!cachedModelFamilies) {
+    const modelsData: SeedModel[] = JSON.parse(
+      readFileSync(join(seedDir, 'models.json'), 'utf-8')
+    );
+    cachedModelFamilies = new Map(modelsData.map(m => [m.model_id, m.family_id]));
   }
 
   // Get family lineage for this model
@@ -538,13 +386,7 @@ export async function getHistoricalPrices(
   const model = state.models.get(modelId);
   if (!model) return [];
 
-  // Get family from models.json
-  const seedDir = join(__dirname, '../../seed');
-  const modelsData: SeedModel[] = JSON.parse(
-    readFileSync(join(seedDir, 'models.json'), 'utf-8')
-  );
-  const modelInfo = modelsData.find(m => m.model_id === modelId);
-  const familyId = modelInfo?.family_id;
+  const familyId = cachedModelFamilies.get(modelId);
 
   // Get lineage models
   const lineageModels = familyId ? (familyLineage[familyId] || [familyId]) : [modelId];
@@ -553,7 +395,7 @@ export async function getHistoricalPrices(
   const relevantPrices = cachedSeedPrices!
     .filter(p =>
       p.price_type === priceType &&
-      (lineageModels.some(lm => p.model_id.includes(lm)) || p.model_id === modelId)
+      (lineageModels.some(lm => p.model_id === lm || p.model_id.startsWith(lm + '-')) || p.model_id === modelId)
     )
     .sort((a, b) => new Date(a.observed_at).getTime() - new Date(b.observed_at).getTime())
     .map(p => ({

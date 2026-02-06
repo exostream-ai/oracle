@@ -268,16 +268,16 @@
     "price_type": "sync",
     "beta": 10.00,
     "source": "historical:public-record",
-    "observed_at": "2025-02-01T00:00:00Z",
-    "effective_from": "2025-02-01T00:00:00Z"
+    "observed_at": "2025-07-01T00:00:00Z",
+    "effective_from": "2025-07-01T00:00:00Z"
   },
   {
     "model_id": "grok-3-mini",
     "price_type": "sync",
     "beta": 1.00,
     "source": "historical:public-record",
-    "observed_at": "2025-02-01T00:00:00Z",
-    "effective_from": "2025-02-01T00:00:00Z"
+    "observed_at": "2025-07-01T00:00:00Z",
+    "effective_from": "2025-07-01T00:00:00Z"
   },
   {
     "model_id": "mistral-large",

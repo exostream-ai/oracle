@@ -6,10 +6,12 @@
  */
 
 import { getClientOrNull } from '@/db/client.js';
+import { getDefaultTheta, getDefaultSigma } from '../core/constants.js';
 
 export interface ThetaEstimate {
   modelId: string;
   theta: number;
+  sigma: number;
   familyPriorWeight: number;  // gamma_t: 0 = pure prior, 1 = pure observed
   nObservations: number;
   windowStart: Date;
@@ -79,9 +81,16 @@ export async function estimateTheta(modelId: string): Promise<ThetaEstimate | nu
   const lastDate = new Date(history[history.length - 1].observed_at);
   const spanMonths = (lastDate.getTime() - firstDate.getTime()) / (30.44 * 24 * 60 * 60 * 1000);
 
+  // Compute sigma: std dev of monthly log returns
+  const monthlyReturns = logReturns.map(lr => lr.logReturn / lr.dt);
+  const meanReturn = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length;
+  const variance = monthlyReturns.reduce((a, r) => a + Math.pow(r - meanReturn, 2), 0) / monthlyReturns.length;
+  const sigmaObserved = Math.max(0.02, Math.min(0.25, Math.sqrt(variance)));
+
   // Blend with family prior (crossover at ~2-3 months)
   let familyPriorWeight = 1.0;
   let thetaFinal = thetaObserved;
+  let sigmaFinal = sigmaObserved;
 
   if (spanMonths < 3) {
     // Blend with family prior
@@ -90,6 +99,7 @@ export async function estimateTheta(modelId: string): Promise<ThetaEstimate | nu
       // gamma increases from 0 to 1 as span goes from 0 to 3 months
       familyPriorWeight = 1 - Math.min(1, spanMonths / 3);
       thetaFinal = familyPriorWeight * prior.theta + (1 - familyPriorWeight) * thetaObserved;
+      sigmaFinal = familyPriorWeight * prior.sigma + (1 - familyPriorWeight) * sigmaObserved;
     }
   } else {
     familyPriorWeight = 0;
@@ -98,6 +108,7 @@ export async function estimateTheta(modelId: string): Promise<ThetaEstimate | nu
   return {
     modelId,
     theta: Math.max(0, thetaFinal), // theta should be non-negative for normal decay
+    sigma: sigmaFinal,
     familyPriorWeight,
     nObservations: history.length,
     windowStart: firstDate,
@@ -133,9 +144,23 @@ async function getFamilyPrior(modelId: string): Promise<ThetaEstimate | null> {
     ? parseFloat(familyTheta[0].avg_theta)
     : getDefaultTheta(familyId);
 
+  // Get average sigma for family
+  const familySigma = await sql`
+    SELECT AVG(ep.sigma) as avg_sigma
+    FROM extrinsic_params ep
+    JOIN models m ON ep.model_id = m.model_id
+    WHERE m.family_id = ${familyId}
+      AND m.model_id != ${modelId}
+  `;
+
+  const avgSigma = familySigma[0]?.avg_sigma
+    ? parseFloat(familySigma[0].avg_sigma)
+    : getDefaultSigma(familyId);
+
   return {
     modelId,
     theta: avgTheta,
+    sigma: avgSigma,
     familyPriorWeight: 1.0,
     nObservations: 0,
     windowStart: new Date(),
@@ -143,25 +168,6 @@ async function getFamilyPrior(modelId: string): Promise<ThetaEstimate | null> {
   };
 }
 
-/**
- * Default theta values by family (from historical analysis)
- */
-function getDefaultTheta(familyId: string): number {
-  const defaults: Record<string, number> = {
-    'claude-4': 0.031,
-    'claude-3.5': 0.04,
-    'gpt-4.1': 0.08,
-    'gpt-4o': 0.06,
-    'o-series': 0.05,
-    'gemini-2.5': 0.05,
-    'gemini-2.0': 0.06,
-    'grok-3': 0.04,
-    'mistral-large': 0.05,
-    'deepseek-v3': 0.03,
-    'deepseek-r1': 0.04,
-  };
-  return defaults[familyId] ?? 0.05;
-}
 
 /**
  * Estimate theta for all active models
@@ -174,12 +180,16 @@ export async function estimateAllThetas(): Promise<ThetaEstimate[]> {
     SELECT model_id FROM models WHERE status = 'active'
   `;
 
+  // Process models concurrently with concurrency limit of 5
+  const CONCURRENCY = 5;
   const estimates: ThetaEstimate[] = [];
+  const modelIds = models.map((m: any) => m.model_id as string);
 
-  for (const model of models) {
-    const estimate = await estimateTheta(model.model_id);
-    if (estimate) {
-      estimates.push(estimate);
+  for (let i = 0; i < modelIds.length; i += CONCURRENCY) {
+    const batch = modelIds.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(batch.map(id => estimateTheta(id)));
+    for (const estimate of results) {
+      if (estimate) estimates.push(estimate);
     }
   }
 
@@ -194,14 +204,11 @@ export async function saveThetaEstimates(estimates: ThetaEstimate[]): Promise<vo
   if (!sql) return;
 
   for (const est of estimates) {
-    // We need sigma too, so get it from the sigma module
-    const sigma = 0.02; // placeholder - will be computed by sigma.ts
-
     await sql`
       INSERT INTO extrinsic_params (
         model_id, theta, sigma, window_start, window_end, n_observations, family_prior_weight
       ) VALUES (
-        ${est.modelId}, ${est.theta}, ${sigma},
+        ${est.modelId}, ${est.theta}, ${est.sigma},
         ${est.windowStart}, ${est.windowEnd}, ${est.nObservations}, ${est.familyPriorWeight}
       )
     `;

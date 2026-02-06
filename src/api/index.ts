@@ -78,7 +78,6 @@ app.onError((err, c) => {
   console.error('API Error:', err);
   return c.json({
     error: 'Internal server error',
-    message: err.message,
   }, 500);
 });
 

@@ -27,14 +27,17 @@ interface ApiKeyData {
   rateLimit: number; // requests per minute
 }
 
-// Generate a random API key
+// Generate a cryptographically secure API key
 function generateApiKey(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   const segments = [];
+  const randomBytes = new Uint8Array(32);
+  crypto.getRandomValues(randomBytes);
+  let byteIdx = 0;
   for (let s = 0; s < 4; s++) {
     let segment = '';
     for (let i = 0; i < 8; i++) {
-      segment += chars[Math.floor(Math.random() * chars.length)];
+      segment += chars[randomBytes[byteIdx++] % chars.length];
     }
     segments.push(segment);
   }
@@ -49,6 +52,9 @@ import historicalPrices from '../../seed/historical_prices.json';
 
 // Types
 import type { GreekSheet, ForwardPrice, OracleState, ContextTier } from '../core/types.js';
+
+// Core pricing functions — single source of truth for math
+import { effectiveInputRate, kappa as computeKappa, spotCost as computeSpotCost, forwardPrice as computeForwardPrice, decayFactor as computeDecayFactor } from '../core/pricing.js';
 
 // Seed data types
 interface SeedModel {
@@ -85,154 +91,10 @@ interface SeedPrice {
   source: string;
 }
 
-// Family lineage for theta computation
-const familyLineage: Record<string, string[]> = {
-  'gpt-4.1': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1'],
-  'gpt-4o': ['gpt-4o'],
-  'o-series': ['o-series'],
-  'claude-4': ['claude-3-opus', 'opus-4.5', 'opus-4.6'],
-  'claude-3.5': ['claude-3.5', 'sonnet-3.5', 'sonnet-4'],
-  'gemini-2.5-pro': ['gemini-2.5-pro'],
-  'gemini-2.5-flash': ['gemini-2.5-flash'],
-  'gemini-2.0': ['gemini-2.0'],
-  'grok-4': ['grok-3', 'grok-4'],
-  'grok-4-fast': ['grok-3-mini', 'grok-4-fast'],
-  'grok-3': ['grok-3'],
-  'mistral-large': ['mistral-large'],
-  'deepseek-v3': ['deepseek-v3'],
-  'deepseek-r1': ['deepseek-r1'],
-  'gpt-5': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1', 'gpt-5', 'gpt-5.1', 'gpt-5.2'],
-  'grok-4.1-fast': ['grok-3-mini', 'grok-4-fast', 'grok-4.1-fast'],
-  'gemini-3-pro': ['gemini-1.5-pro', 'gemini-2.5-pro', 'gemini-3-pro'],
-  'gemini-3-flash': ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-3-flash'],
-};
+// Family lineage and theta/sigma defaults from single source of truth
+import { FAMILY_LINEAGE as familyLineage, computeThetaFromHistory } from '../core/constants.js';
 
-function getDefaultTheta(familyId: string): number {
-  const defaults: Record<string, number> = {
-    'gpt-4.1': 0.08,
-    'gpt-4o': 0.07,
-    'o-series': 0.04,
-    'claude-4': 0.05,
-    'claude-3.5': 0.02,
-    'gemini-2.5-pro': 0.06,
-    'gemini-2.5-flash': 0.06,
-    'gemini-2.0': 0.05,
-    'grok-3': 0.03,
-    'mistral-large': 0.12,
-    'deepseek-v3': 0.02,
-    'deepseek-r1': 0.03,
-    'gpt-5': 0.06,
-    'grok-4.1-fast': 0.04,
-    'gemini-3-pro': 0.06,
-    'gemini-3-flash': 0.06,
-  };
-  return defaults[familyId] ?? 0.05;
-}
 
-function getDefaultSigma(familyId: string): number {
-  const defaults: Record<string, number> = {
-    'gpt-4.1': 0.12,
-    'gpt-4o': 0.10,
-    'o-series': 0.06,
-    'claude-4': 0.08,
-    'claude-3.5': 0.04,
-    'gemini-2.5-pro': 0.08,
-    'gemini-2.5-flash': 0.08,
-    'gemini-2.0': 0.06,
-    'grok-3': 0.05,
-    'mistral-large': 0.15,
-    'deepseek-v3': 0.03,
-    'deepseek-r1': 0.04,
-    'gpt-5': 0.10,
-    'grok-4.1-fast': 0.06,
-    'gemini-3-pro': 0.08,
-    'gemini-3-flash': 0.08,
-  };
-  return defaults[familyId] ?? 0.06;
-}
-
-function computeThetaFromHistory(
-  prices: SeedPrice[],
-  familyId: string
-): { theta: number; sigma: number } {
-  // Get lineage models to include in history - match by model_id pattern, not family lookup
-  const lineageModels = familyLineage[familyId] || [familyId];
-
-  // Collect all sync prices for the lineage, sorted by date
-  // Match model_id directly against lineage patterns (historical models like 'gpt-4' won't be in models.json)
-  const relevantPrices = prices
-    .filter(p => {
-      if (p.price_type !== 'sync') return false;
-      // Check if model_id matches any lineage pattern exactly or with version suffix
-      return lineageModels.some(lm => {
-        // Match exact model_id or versioned variants (e.g., gpt-4, gpt-4-turbo)
-        // But NOT different model tiers (e.g., don't mix Pro and Flash)
-        if (p.model_id === lm) return true;
-        if (p.model_id.startsWith(lm + '-') && !p.model_id.includes('mini') && !p.model_id.includes('flash') && !p.model_id.includes('nano')) {
-          return true;
-        }
-        return false;
-      });
-    })
-    .sort((a, b) => new Date(a.observed_at).getTime() - new Date(b.observed_at).getTime());
-
-  // Need at least 2 data points to compute theta
-  if (relevantPrices.length < 2) {
-    return { theta: getDefaultTheta(familyId), sigma: getDefaultSigma(familyId) };
-  }
-
-  // Compute log returns between consecutive observations
-  const logReturns: number[] = [];
-  const timeDeltas: number[] = []; // in months
-
-  for (let i = 1; i < relevantPrices.length; i++) {
-    const prevPrice = relevantPrices[i - 1].beta;
-    const currPrice = relevantPrices[i].beta;
-    const prevDate = new Date(relevantPrices[i - 1].observed_at);
-    const currDate = new Date(relevantPrices[i].observed_at);
-
-    // Time difference in months
-    const dtMonths = (currDate.getTime() - prevDate.getTime()) / (30.44 * 24 * 60 * 60 * 1000);
-
-    if (dtMonths > 0.5 && prevPrice > 0 && currPrice > 0) { // At least ~2 weeks between observations
-      const logReturn = Math.log(currPrice / prevPrice);
-      logReturns.push(logReturn);
-      timeDeltas.push(dtMonths);
-    }
-  }
-
-  if (logReturns.length === 0) {
-    return { theta: getDefaultTheta(familyId), sigma: getDefaultSigma(familyId) };
-  }
-
-  // Compute theta: weighted average of -logReturn / dt (newer observations weighted more)
-  const lambda = 0.85;
-  let weightedTheta = 0;
-  let totalWeight = 0;
-
-  for (let i = 0; i < logReturns.length; i++) {
-    const weight = Math.pow(lambda, logReturns.length - 1 - i);
-    const thetaObs = -logReturns[i] / timeDeltas[i];
-    weightedTheta += weight * thetaObs;
-    totalWeight += weight;
-  }
-
-  let theta = weightedTheta / totalWeight;
-
-  // Clamp theta to reasonable range (1% to 15% per month)
-  theta = Math.max(0.01, Math.min(0.15, theta));
-
-  // Compute sigma: standard deviation of monthly log returns
-  const monthlyReturns = logReturns.map((lr, i) => lr / timeDeltas[i]); // normalize to monthly
-  const mean = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length;
-  const variance = monthlyReturns.reduce((a, r) => a + Math.pow(r - mean, 2), 0) / monthlyReturns.length;
-  let sigma = Math.sqrt(variance);
-
-  // Clamp sigma to reasonable range (2% to 25% per month)
-  sigma = Math.max(0.02, Math.min(0.25, sigma));
-
-  return { theta, sigma };
-}
 
 // Build oracle state from seed data
 function buildOracleState(): OracleState {
@@ -269,6 +131,9 @@ function buildOracleState(): OracleState {
         alpha: t.alpha,
       })));
     }
+
+    // Expose tiers to module scope for pricing endpoints
+    modelContextTiers = seedContextTiers;
 
     modelsMap.set(model.model_id, {
       modelId: model.model_id,
@@ -326,8 +191,19 @@ function buildOracleState(): OracleState {
   };
 }
 
+// Context tiers stored alongside oracle state (populated during build)
+let modelContextTiers = new Map<string, ContextTier[]>();
+
+// Reverse lookup: ticker (uppercase) → GreekSheet for O(1) ticker lookups
+let tickerIndex = new Map<string, GreekSheet>();
+
 // Initialize oracle state once at startup
 const oracleState = buildOracleState();
+
+// Build ticker index after oracle state is ready
+for (const model of oracleState.models.values()) {
+  tickerIndex.set(model.tickerSync.toUpperCase(), model);
+}
 
 // Create Hono app with environment bindings
 const app = new Hono<{ Bindings: Env }>();
@@ -350,6 +226,38 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   maxAge: 86400,
 }));
+
+// Rate limiting: 60 requests per minute per IP
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 60;
+
+app.use('/v1/*', async (c, next) => {
+  const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+  const now = Date.now();
+  const timestamps = rateLimitMap.get(ip) || [];
+
+  // Remove timestamps outside the window
+  const recent = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW_MS);
+
+  if (recent.length >= RATE_LIMIT_MAX) {
+    return c.json({ error: 'Rate limit exceeded', retry_after_seconds: 60 }, 429);
+  }
+
+  recent.push(now);
+  rateLimitMap.set(ip, recent);
+
+  // Periodic cleanup: if map is large, prune stale entries
+  if (rateLimitMap.size > 10_000) {
+    for (const [key, ts] of rateLimitMap) {
+      if (ts.every(t => now - t >= RATE_LIMIT_WINDOW_MS)) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
+
+  await next();
+});
 
 // Optional API key tracking middleware (doesn't block, just tracks usage)
 app.use('/v1/*', async (c, next) => {
@@ -431,9 +339,8 @@ app.get('/v1/spots', (c) => {
 // GET /v1/spots/:ticker - Get spot price for specific ticker
 app.get('/v1/spots/:ticker', (c) => {
   const ticker = c.req.param('ticker').toUpperCase();
-  const model = Array.from(oracleState.models.values()).find(
-    m => m.tickerSync.toUpperCase() === ticker || m.tickerBatch?.toUpperCase() === ticker
-  );
+  const model = tickerIndex.get(ticker) ||
+    Array.from(oracleState.models.values()).find(m => m.tickerBatch?.toUpperCase() === ticker);
   if (!model) {
     return c.json({ error: 'Ticker not found', ticker }, 404);
   }
@@ -477,9 +384,8 @@ app.get('/v1/greeks', (c) => {
 // GET /v1/greeks/:ticker - Get Greek sheet for specific ticker
 app.get('/v1/greeks/:ticker', (c) => {
   const ticker = c.req.param('ticker').toUpperCase();
-  const model = Array.from(oracleState.models.values()).find(
-    m => m.tickerSync.toUpperCase() === ticker || m.tickerBatch?.toUpperCase() === ticker
-  );
+  const model = tickerIndex.get(ticker) ||
+    Array.from(oracleState.models.values()).find(m => m.tickerBatch?.toUpperCase() === ticker);
   if (!model) {
     return c.json({ error: 'Ticker not found', ticker }, 404);
   }
@@ -489,9 +395,7 @@ app.get('/v1/greeks/:ticker', (c) => {
 // GET /v1/forwards/:ticker - Get forward curve for ticker
 app.get('/v1/forwards/:ticker', (c) => {
   const ticker = c.req.param('ticker').toUpperCase();
-  const model = Array.from(oracleState.models.values()).find(
-    m => m.tickerSync.toUpperCase() === ticker
-  );
+  const model = tickerIndex.get(ticker);
   if (!model) {
     return c.json({ error: 'Ticker not found', ticker }, 404);
   }
@@ -525,17 +429,35 @@ app.post('/v1/price', async (c) => {
   const nThink = n_think ?? body.nThink;
   const horizonMonths = horizon_months ?? body.horizonMonths;
 
+  // Input validation
+  const lookupKey = modelParam || ticker || modelId;
+  if (!lookupKey) {
+    return c.json({ error: 'Missing required field: model, ticker, or modelId' }, 400);
+  }
+  if (nIn !== undefined && (typeof nIn !== 'number' || nIn < 0)) {
+    return c.json({ error: 'n_in must be a non-negative number' }, 400);
+  }
+  if (nOut !== undefined && (typeof nOut !== 'number' || nOut < 0)) {
+    return c.json({ error: 'n_out must be a non-negative number' }, 400);
+  }
+  if (nThink !== undefined && (typeof nThink !== 'number' || nThink < 0)) {
+    return c.json({ error: 'n_think must be a non-negative number' }, 400);
+  }
+  if (typeof eta !== 'number' || eta < 0 || eta > 1) {
+    return c.json({ error: 'eta must be a number between 0 and 1' }, 400);
+  }
+  if (horizonMonths !== undefined && (typeof horizonMonths !== 'number' || horizonMonths <= 0)) {
+    return c.json({ error: 'horizon_months must be a positive number' }, 400);
+  }
+
   // Find model by ID, ticker, or model param (which is ticker from frontend)
   let model: GreekSheet | undefined;
-  const lookupKey = modelParam || ticker || modelId;
-  if (lookupKey) {
+  {
     // Try exact model ID match first
     model = oracleState.models.get(lookupKey);
     // Then try ticker match
     if (!model) {
-      model = Array.from(oracleState.models.values()).find(
-        m => m.tickerSync.toUpperCase() === lookupKey.toUpperCase()
-      );
+      model = tickerIndex.get(lookupKey.toUpperCase());
     }
   }
 
@@ -550,34 +472,26 @@ app.post('/v1/price', async (c) => {
   const beta = model.betaSync;
   const rIn = model.rIn;
   const rCache = model.rCache;
-  const rThink = model.rThink ?? 1;
-
-  // Calculate effective input rate with caching
-  const rInEff = rIn * (1 - eta * (1 - rCache));
-
-  // Calculate kappa (context cost multiplier)
+  const rThink = model.rThink ?? 0;
   const W = model.contextWindow;
-  const tau = (nIn || 0) / W;
-  const kappa = tau <= 1 ? 1 : 1 + (tau - 1); // Simplified kappa calculation
+  const tiers = modelContextTiers.get(model.modelId) ?? [{ tauStart: 0, tauEnd: 1, alpha: 1 }];
 
-  // Calculate spot cost
-  const inputCost = (nIn || 0) * rInEff * beta / 1_000_000;
-  const outputCost = (nOut || 0) * beta / 1_000_000;
-  const thinkCost = (nThink || 0) * rThink * beta / 1_000_000;
-  const spotCost = inputCost + outputCost + thinkCost;
+  // Use core pricing functions (same math as Node.js API)
+  const rInEff = effectiveInputRate(rIn, rCache, eta, nIn || 0, W, tiers);
+  const k = computeKappa(nIn || 0, nOut || 0, rInEff);
+  const S = computeSpotCost(beta, nOut || 0, nIn || 0, rInEff, nThink || 0, rThink);
 
   // Calculate cost without cache for savings comparison
-  const rInNoCacheEff = model.rIn;
-  const inputCostNoCache = (nIn || 0) * rInNoCacheEff * beta / 1_000_000;
-  const spotCostNoCache = inputCostNoCache + outputCost + thinkCost;
-  const cacheSavings = spotCostNoCache - spotCost;
+  const rInEffNoCache = effectiveInputRate(rIn, rCache, 0, nIn || 0, W, tiers);
+  const SNoCache = computeSpotCost(beta, nOut || 0, nIn || 0, rInEffNoCache, nThink || 0, rThink);
+  const cacheSavings = SNoCache - S;
 
   const result: any = {
     data: {
       model: model.tickerSync,
       display_name: model.displayName,
-      spot_cost: spotCost,
-      kappa,
+      spot_cost: S,
+      kappa: k,
       r_in_eff: rInEff,
       beta_used: beta,
       task_profile: {
@@ -593,27 +507,25 @@ app.post('/v1/price', async (c) => {
 
   // Calculate forward cost if horizon specified
   if (horizonMonths && model.theta) {
-    const decayFactor = Math.exp(-model.theta * horizonMonths);
-    const betaForward = beta * decayFactor;
-    const forwardInputCost = (nIn || 0) * rInEff * betaForward / 1_000_000;
-    const forwardOutputCost = (nOut || 0) * betaForward / 1_000_000;
-    const forwardThinkCost = (nThink || 0) * rThink * betaForward / 1_000_000;
+    const D = computeDecayFactor(model.theta, horizonMonths);
+    const forwardCost = S * D;
+    const betaForward = computeForwardPrice(beta, model.theta, horizonMonths);
 
     result.data.forward = {
       horizon_months: horizonMonths,
-      cost: forwardInputCost + forwardOutputCost + forwardThinkCost,
+      cost: forwardCost,
       beta_forward: betaForward,
       theta_used: model.theta,
-      decay_factor: decayFactor,
+      decay_factor: D,
     };
   }
 
   // Add cache value if caching is being used
   if (eta > 0 && cacheSavings > 0) {
     result.data.cache_value = {
-      cost_without_cache: spotCostNoCache,
+      cost_without_cache: SNoCache,
       savings: cacheSavings,
-      savings_pct: (cacheSavings / spotCostNoCache) * 100,
+      savings_pct: (cacheSavings / SNoCache) * 100,
     };
   }
 
@@ -623,54 +535,77 @@ app.post('/v1/price', async (c) => {
 // POST /v1/compare - Compare multiple models
 app.post('/v1/compare', async (c) => {
   const body = await c.req.json();
-  const { models: modelIds, nIn, nOut, nThink, eta = 0 } = body;
+  const { models: modelIds } = body;
+  // Support both camelCase and snake_case parameter names
+  const nIn = body.n_in ?? body.nIn ?? 0;
+  const nOut = body.n_out ?? body.nOut ?? 0;
+  const nThink = body.n_think ?? body.nThink ?? 0;
+  const eta = body.eta ?? 0;
 
   if (!modelIds || !Array.isArray(modelIds) || modelIds.length === 0) {
     return c.json({ error: 'models array is required' }, 400);
   }
+  if (typeof nIn !== 'number' || nIn < 0) {
+    return c.json({ error: 'n_in must be a non-negative number' }, 400);
+  }
+  if (typeof nOut !== 'number' || nOut < 0) {
+    return c.json({ error: 'n_out must be a non-negative number' }, 400);
+  }
+  if (typeof eta !== 'number' || eta < 0 || eta > 1) {
+    return c.json({ error: 'eta must be a number between 0 and 1' }, 400);
+  }
 
   const results = [];
   for (const id of modelIds) {
-    const model = oracleState.models.get(id) ||
-      Array.from(oracleState.models.values()).find(
-        m => m.tickerSync.toUpperCase() === id.toUpperCase()
-      );
+    const model = oracleState.models.get(id) || tickerIndex.get(id.toUpperCase());
 
     if (!model || !model.betaSync) continue;
 
     const beta = model.betaSync;
-    const rInEff = model.rIn * (1 - eta * (1 - model.rCache));
-    const rThink = model.rThink ?? 1;
+    const W = model.contextWindow;
+    const rIn = model.rIn;
+    const rCache = model.rCache;
+    const rThink = model.rThink ?? 0;
+    const tiers = modelContextTiers.get(model.modelId) ?? [{ tauStart: 0, tauEnd: 1, alpha: 1 }];
 
-    const inputCost = (nIn || 0) * rInEff * beta / 1_000_000;
-    const outputCost = (nOut || 0) * beta / 1_000_000;
-    const thinkCost = (nThink || 0) * rThink * beta / 1_000_000;
+    // Use core pricing functions (same math as Node.js API)
+    const rInEff = effectiveInputRate(rIn, rCache, eta, nIn, W, tiers);
+    const k = computeKappa(nIn, nOut, rInEff);
+    const actualNThink = model.isReasoning ? nThink : 0;
+    const S = computeSpotCost(beta, nOut, nIn, rInEff, actualNThink, rThink);
 
     results.push({
-      modelId: model.modelId,
       ticker: model.tickerSync,
-      displayName: model.displayName,
+      model_id: model.modelId,
+      display_name: model.displayName,
       provider: model.providerName,
-      costUsd: inputCost + outputCost + thinkCost,
+      spot_cost: S,
+      kappa: k,
       beta,
+      is_reasoning: model.isReasoning,
+      theta: model.theta,
     });
   }
 
-  results.sort((a, b) => a.costUsd - b.costUsd);
+  results.sort((a, b) => a.spot_cost - b.spot_cost);
 
   return c.json({
-    comparison: results,
-    taskProfile: { nIn, nOut, nThink, eta },
-    timestamp: oracleState.lastUpdate.toISOString(),
+    data: {
+      task_profile: { n_in: nIn, n_out: nOut, n_think: nThink, eta },
+      models: results,
+      cheapest: results[0]?.ticker,
+      most_expensive: results[results.length - 1]?.ticker,
+      count: results.length,
+    },
+    oracle_timestamp: oracleState.lastUpdate.toISOString(),
+    cache_age_seconds: 0,
   });
 });
 
 // GET /v1/history/:ticker - Get price history
 app.get('/v1/history/:ticker', (c) => {
   const ticker = c.req.param('ticker').toUpperCase();
-  const model = Array.from(oracleState.models.values()).find(
-    m => m.tickerSync.toUpperCase() === ticker
-  );
+  const model = tickerIndex.get(ticker);
 
   if (!model) {
     return c.json({ error: 'Ticker not found', ticker }, 404);
@@ -828,7 +763,7 @@ app.notFound((c) => {
 // Error handler
 app.onError((err, c) => {
   console.error('API Error:', err);
-  return c.json({ error: 'Internal server error', message: err.message }, 500);
+  return c.json({ error: 'Internal server error' }, 500);
 });
 
 // Browser-like headers for scraping

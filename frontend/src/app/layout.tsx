@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
+import Header from '@/components/Header';
 
 export const metadata: Metadata = {
   title: 'Exostream - The Pricing Oracle for LLM Inference',
@@ -14,34 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col">
-        {/* Header - logo left, nav right */}
-        <header className="border-b border-[#262626] bg-[#0a0a0a]">
-          <div className="max-w-[1400px] mx-auto px-4 h-12 flex items-center justify-between">
-            <a href="/" className="flex items-center">
-              <span className="mono text-lg font-semibold">
-                <span className="text-[#e5e5e5]">exo</span>
-                <span className="text-[#06b6d4]">stream</span>
-              </span>
-            </a>
-            <nav className="flex items-center gap-6">
-              <a href="/#calculator" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
-                Calculator
-              </a>
-              <a href="/canvas" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
-                Canvas
-              </a>
-              <a href="/use-cases" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
-                Use Cases
-              </a>
-              <a href="/methodology" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
-                Methodology
-              </a>
-              <a href="/api-docs" className="text-[#737373] hover:text-[#e5e5e5] text-sm mono">
-                API
-              </a>
-            </nav>
-          </div>
-        </header>
+        <Header />
 
         <main className="flex-1">{children}</main>
 

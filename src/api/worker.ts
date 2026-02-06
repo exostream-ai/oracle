@@ -10,6 +10,37 @@ import { logger } from 'hono/logger';
 import { cors } from 'hono/cors';
 import { cache } from 'hono/cache';
 
+// Environment bindings type
+interface Env {
+  API_KEYS: KVNamespace;
+  ENVIRONMENT: string;
+}
+
+// API Key storage format
+interface ApiKeyData {
+  key: string;
+  name: string;
+  createdAt: string;
+  lastUsed?: string;
+  requestCount: number;
+  tier: 'free' | 'developer' | 'enterprise';
+  rateLimit: number; // requests per minute
+}
+
+// Generate a random API key
+function generateApiKey(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const segments = [];
+  for (let s = 0; s < 4; s++) {
+    let segment = '';
+    for (let i = 0; i < 8; i++) {
+      segment += chars[Math.floor(Math.random() * chars.length)];
+    }
+    segments.push(segment);
+  }
+  return `exo_${segments.join('_')}`;
+}
+
 // Import seed data directly (bundled with worker)
 import providers from '../../seed/providers.json';
 import families from '../../seed/families.json';
@@ -59,11 +90,13 @@ const familyLineage: Record<string, string[]> = {
   'gpt-4.1': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1'],
   'gpt-4o': ['gpt-4o'],
   'o-series': ['o-series'],
-  'claude-4': ['claude-3-opus', 'opus-4.5'],
+  'claude-4': ['claude-3-opus', 'opus-4.5', 'opus-4.6'],
   'claude-3.5': ['claude-3.5', 'sonnet-3.5', 'sonnet-4'],
   'gemini-2.5-pro': ['gemini-2.5-pro'],
   'gemini-2.5-flash': ['gemini-2.5-flash'],
   'gemini-2.0': ['gemini-2.0'],
+  'grok-4': ['grok-3', 'grok-4'],
+  'grok-4-fast': ['grok-3-mini', 'grok-4-fast'],
   'grok-3': ['grok-3'],
   'mistral-large': ['mistral-large'],
   'deepseek-v3': ['deepseek-v3'],
@@ -284,8 +317,8 @@ function buildOracleState(): OracleState {
 // Initialize oracle state once at startup
 const oracleState = buildOracleState();
 
-// Create Hono app
-const app = new Hono();
+// Create Hono app with environment bindings
+const app = new Hono<{ Bindings: Env }>();
 
 // Middleware
 app.use('*', logger());
@@ -302,9 +335,32 @@ app.use('*', cors({
     return 'https://exostream.ai';
   },
   allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   maxAge: 86400,
 }));
+
+// Optional API key tracking middleware (doesn't block, just tracks usage)
+app.use('/v1/*', async (c, next) => {
+  const apiKey = c.req.header('X-API-Key') || c.req.header('Authorization')?.replace('Bearer ', '');
+
+  if (apiKey && c.env?.API_KEYS) {
+    try {
+      const keyData = await c.env.API_KEYS.get(`key:${apiKey}`, 'json') as ApiKeyData | null;
+      if (keyData) {
+        // Update usage stats (fire and forget)
+        keyData.lastUsed = new Date().toISOString();
+        keyData.requestCount = (keyData.requestCount || 0) + 1;
+        c.executionCtx.waitUntil(
+          c.env.API_KEYS.put(`key:${apiKey}`, JSON.stringify(keyData))
+        );
+      }
+    } catch (e) {
+      // Ignore errors - API key tracking is optional
+    }
+  }
+
+  await next();
+});
 
 // Health check
 app.get('/health', (c) => {
@@ -331,6 +387,11 @@ app.get('/', (c) => {
       price: 'POST /v1/price',
       compare: 'POST /v1/compare',
       history: '/v1/history/:ticker',
+      keys: {
+        create: 'POST /v1/keys',
+        usage: 'GET /v1/keys/usage',
+        revoke: 'DELETE /v1/keys',
+      },
     },
     documentation: 'https://exostream.ai/api-docs',
   });
@@ -642,6 +703,110 @@ app.get('/v1/history/:ticker', (c) => {
     cache_age_seconds: 0,
   });
 });
+
+// ============================================
+// API Key Management Routes
+// ============================================
+
+// POST /v1/keys - Generate a new API key
+app.post('/v1/keys', async (c) => {
+  if (!c.env?.API_KEYS) {
+    return c.json({ error: 'API key service not available' }, 503);
+  }
+
+  try {
+    const body = await c.req.json().catch(() => ({})) as { name?: string };
+    const name = body.name || 'Unnamed Key';
+
+    const apiKey = generateApiKey();
+    const keyData: ApiKeyData = {
+      key: apiKey,
+      name,
+      createdAt: new Date().toISOString(),
+      requestCount: 0,
+      tier: 'free',
+      rateLimit: 60, // 60 requests per minute for free tier
+    };
+
+    await c.env.API_KEYS.put(`key:${apiKey}`, JSON.stringify(keyData));
+
+    return c.json({
+      success: true,
+      api_key: apiKey,
+      name,
+      tier: 'free',
+      rate_limit: '60 requests/minute',
+      message: 'Store this key securely - it cannot be retrieved later.',
+    }, 201);
+  } catch (error) {
+    console.error('Error creating API key:', error);
+    return c.json({ error: 'Failed to create API key' }, 500);
+  }
+});
+
+// GET /v1/keys/usage - Get usage stats for an API key
+app.get('/v1/keys/usage', async (c) => {
+  if (!c.env?.API_KEYS) {
+    return c.json({ error: 'API key service not available' }, 503);
+  }
+
+  const apiKey = c.req.header('X-API-Key') || c.req.header('Authorization')?.replace('Bearer ', '');
+  if (!apiKey) {
+    return c.json({ error: 'API key required. Include X-API-Key header.' }, 401);
+  }
+
+  try {
+    const keyData = await c.env.API_KEYS.get(`key:${apiKey}`, 'json') as ApiKeyData | null;
+    if (!keyData) {
+      return c.json({ error: 'Invalid API key' }, 404);
+    }
+
+    return c.json({
+      name: keyData.name,
+      created_at: keyData.createdAt,
+      last_used: keyData.lastUsed,
+      request_count: keyData.requestCount,
+      tier: keyData.tier,
+      rate_limit: `${keyData.rateLimit} requests/minute`,
+    });
+  } catch (error) {
+    console.error('Error fetching API key usage:', error);
+    return c.json({ error: 'Failed to fetch usage' }, 500);
+  }
+});
+
+// DELETE /v1/keys - Revoke an API key
+app.delete('/v1/keys', async (c) => {
+  if (!c.env?.API_KEYS) {
+    return c.json({ error: 'API key service not available' }, 503);
+  }
+
+  const apiKey = c.req.header('X-API-Key') || c.req.header('Authorization')?.replace('Bearer ', '');
+  if (!apiKey) {
+    return c.json({ error: 'API key required. Include X-API-Key header.' }, 401);
+  }
+
+  try {
+    const keyData = await c.env.API_KEYS.get(`key:${apiKey}`, 'json') as ApiKeyData | null;
+    if (!keyData) {
+      return c.json({ error: 'Invalid API key' }, 404);
+    }
+
+    await c.env.API_KEYS.delete(`key:${apiKey}`);
+
+    return c.json({
+      success: true,
+      message: 'API key revoked',
+    });
+  } catch (error) {
+    console.error('Error revoking API key:', error);
+    return c.json({ error: 'Failed to revoke API key' }, 500);
+  }
+});
+
+// ============================================
+// End API Key Management Routes
+// ============================================
 
 // 404 handler
 app.notFound((c) => {

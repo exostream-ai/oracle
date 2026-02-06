@@ -63,11 +63,13 @@ const familyLineage: Record<string, string[]> = {
   'gpt-4.1': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1'],  // Clear $60→$8 history
   'gpt-4o': ['gpt-4o'],  // Only GPT-4o itself (has $15→$10 drop)
   'o-series': ['o-series'],  // New, use defaults
-  'claude-4': ['claude-3-opus', 'opus-4.5'],  // $75→$45 decline
+  'claude-4': ['claude-3-opus', 'opus-4.5', 'opus-4.6'],  // $75→$45→$25 decline
   'claude-3.5': ['claude-3.5', 'sonnet-3.5', 'sonnet-4'],
   'gemini-2.5-pro': ['gemini-2.5-pro'],  // Separate from Flash
   'gemini-2.5-flash': ['gemini-2.5-flash'],  // Separate from Pro
   'gemini-2.0': ['gemini-2.0'],
+  'grok-4': ['grok-3', 'grok-4'],
+  'grok-4-fast': ['grok-3-mini', 'grok-4-fast'],
   'grok-3': ['grok-3'],
   'mistral-large': ['mistral-large'],  // Has $24→$12 history
   'deepseek-v3': ['deepseek-v3'],

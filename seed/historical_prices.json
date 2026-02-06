@@ -144,6 +144,22 @@
     "effective_from": "2025-02-01T00:00:00Z"
   },
   {
+    "model_id": "opus-4.6",
+    "price_type": "sync",
+    "beta": 25.00,
+    "source": "historical:public-record",
+    "observed_at": "2026-02-05T00:00:00Z",
+    "effective_from": "2026-02-05T00:00:00Z"
+  },
+  {
+    "model_id": "opus-4.6",
+    "price_type": "batch",
+    "beta": 12.50,
+    "source": "historical:public-record",
+    "observed_at": "2026-02-05T00:00:00Z",
+    "effective_from": "2026-02-05T00:00:00Z"
+  },
+  {
     "model_id": "sonnet-3.5",
     "price_type": "sync",
     "beta": 15.00,
@@ -294,5 +310,37 @@
     "source": "historical:public-record",
     "observed_at": "2025-01-01T00:00:00Z",
     "effective_from": "2025-01-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-3",
+    "price_type": "sync",
+    "beta": 15.00,
+    "source": "historical:public-record",
+    "observed_at": "2025-02-01T00:00:00Z",
+    "effective_from": "2025-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-3-mini",
+    "price_type": "sync",
+    "beta": 0.50,
+    "source": "historical:public-record",
+    "observed_at": "2025-02-01T00:00:00Z",
+    "effective_from": "2025-02-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-4",
+    "price_type": "sync",
+    "beta": 15.00,
+    "source": "historical:public-record",
+    "observed_at": "2025-07-09T00:00:00Z",
+    "effective_from": "2025-07-09T00:00:00Z"
+  },
+  {
+    "model_id": "grok-4-fast",
+    "price_type": "sync",
+    "beta": 0.50,
+    "source": "historical:public-record",
+    "observed_at": "2025-07-09T00:00:00Z",
+    "effective_from": "2025-07-09T00:00:00Z"
   }
 ]

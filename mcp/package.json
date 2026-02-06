@@ -1,0 +1,50 @@
+{
+  "name": "@exostream/mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Exostream LLM pricing oracle - get real-time inference costs for Claude, GPT, Gemini, and more",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "exostream-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "llm",
+    "pricing",
+    "oracle",
+    "ai",
+    "claude",
+    "gpt",
+    "gemini",
+    "anthropic",
+    "openai",
+    "google",
+    "inference",
+    "cost"
+  ],
+  "author": "Exostream",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/exostream/exostream.git"
+  },
+  "homepage": "https://exostream.ai",
+  "bugs": {
+    "url": "https://github.com/exostream/exostream/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

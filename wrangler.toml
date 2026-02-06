@@ -11,6 +11,11 @@ routes = [
 [vars]
 ENVIRONMENT = "production"
 
+# KV Namespace for API keys and usage tracking
+[[kv_namespaces]]
+binding = "API_KEYS"
+id = "373c616070b24744b64b56b718643374"
+
 # Cron Triggers for scheduled scraper runs
 # Runs every hour at minute 0
 [triggers]

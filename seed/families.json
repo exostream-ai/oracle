@@ -80,6 +80,26 @@
     "is_reasoning": false
   },
   {
+    "family_id": "grok-4",
+    "provider_id": "xai",
+    "display_name": "Grok 4",
+    "r_in": 0.20,
+    "r_cache": 0.025,
+    "r_think": 0.50,
+    "r_batch": null,
+    "is_reasoning": true
+  },
+  {
+    "family_id": "grok-4-fast",
+    "provider_id": "xai",
+    "display_name": "Grok 4 Fast",
+    "r_in": 0.40,
+    "r_cache": 0.05,
+    "r_think": null,
+    "r_batch": null,
+    "is_reasoning": false
+  },
+  {
     "family_id": "grok-3",
     "provider_id": "xai",
     "display_name": "Grok 3",

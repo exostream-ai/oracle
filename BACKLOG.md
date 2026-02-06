@@ -12,11 +12,11 @@
 
 ## High Priority (ship within first week)
 
-- [ ] MCP server distribution — publish @exostream/mcp to npm, submit to mcp.so and Smithery. Server exists at src/mcp/ with 4 tools.
+- [x] MCP server distribution — Published to npm as @exostream/mcp v1.0.0. Install with `npm install -g @exostream/mcp`. Still TODO: submit to mcp.so and Smithery registries.
 - [x] Use cases page — /use-cases complete with all 5 sections: AI Engineers, Finance/Procurement, LLM Tooling Platforms, AI Analysts/Investors, Agentic Systems
-- [ ] Model coverage gap — check if xAI has shipped Grok 4.x models since seed data was created. Add any missing models across all providers
-- [ ] Embeddable widget — small iframe/React component showing live ticker for a single model. Bloggers and docs sites can embed it. Every embed is a backlink
-- [ ] API key system — even though launch is free, set up optional API keys for tracking usage and future rate limit tiers (requires Cloudflare KV/D1)
+- [x] Model coverage gap — Added Grok 4 ($3/$15) and Grok 4 Fast ($0.20/$0.50) from xAI July 2025 release. Also added Opus 4.6 from Feb 2026.
+- [x] Embeddable widget — EmbedTicker component at frontend/src/components/EmbedTicker.tsx. Embed URL: exostream.ai/embed/[model]?theme=dark&theta=true
+- [x] API key system — Cloudflare KV namespace created (API_KEYS). Endpoints: POST /v1/keys (create), GET /v1/keys/usage (stats), DELETE /v1/keys (revoke). Free tier: 60 req/min. Keys track request_count and last_used.
 
 ## GTM & Launch (do after deployment)
 
@@ -46,6 +46,10 @@
 - [ ] Paid tiers — $0 free (delayed, spot only), $49-99/mo developer (real-time, historical), $299-499/mo enterprise (WebSocket, forwards, bulk export, SLA)
 - [ ] Historical data product — sell structured pricing database to researchers/analysts. $500-2K/yr academic, $5-10K/yr commercial
 - [ ] Developer-friendly language — API docs and calculator should use plain language (κ = "your price exposure multiplier", Δ_cache = "what caching saves you per query"). Save finance jargon for methodology page
+
+## Research Completed
+
+- [x] Internal pricing API research — Investigated network traffic from OpenAI, Anthropic, and Google pricing pages. **No clean pricing APIs found.** All providers embed pricing data directly in HTML/JS. Current HTML scraper approach is correct. See `docs/internal-pricing-apis.md` for full report.
 
 ## Known Issues
 

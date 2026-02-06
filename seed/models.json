@@ -1,5 +1,19 @@
 [
   {
+    "model_id": "opus-4.6",
+    "family_id": "claude-4",
+    "display_name": "Claude Opus 4.6",
+    "ticker_sync": "OPUS-4.6",
+    "ticker_batch": "OPUS-4.6.B",
+    "context_window": 1000000,
+    "launch_date": "2026-02-05",
+    "status": "active",
+    "tiers": [
+      { "tau_start": 0, "tau_end": 0.2, "alpha": 1.0 },
+      { "tau_start": 0.2, "tau_end": 1.0, "alpha": 1.5 }
+    ]
+  },
+  {
     "model_id": "opus-4.5",
     "family_id": "claude-4",
     "display_name": "Claude Opus 4.5",
@@ -156,6 +170,28 @@
     "ticker_batch": "GEMINI-2.0-FLASH.B",
     "context_window": 1000000,
     "launch_date": "2024-12-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "grok-4",
+    "family_id": "grok-4",
+    "display_name": "Grok 4",
+    "ticker_sync": "GROK-4",
+    "ticker_batch": null,
+    "context_window": 256000,
+    "launch_date": "2025-07-09",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "grok-4-fast",
+    "family_id": "grok-4-fast",
+    "display_name": "Grok 4 Fast",
+    "ticker_sync": "GROK-4-FAST",
+    "ticker_batch": null,
+    "context_window": 256000,
+    "launch_date": "2025-07-09",
     "status": "active",
     "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
   },

@@ -1,35 +1,54 @@
 export default function MethodologyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Methodology</h1>
+    <div className="max-w-[900px] mx-auto px-6 py-8">
+      <h1 className="text-xl mono mb-8">Methodology</h1>
 
-      <div className="prose prose-invert prose-lg">
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">The Fundamental Equation</h2>
-          <div className="card bg-surface-light p-6 font-mono text-center text-xl mb-4">
-            C(T, M, t) = S(T, M) × D(M, t)
+      <div className="space-y-8">
+        {/* Fundamental Equation */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">The Fundamental Equation</h2>
           </div>
-          <p className="text-text-secondary">
-            Total expected cost equals spot cost times the decay factor. At spot (t = 0),
-            D = 1 and you get the exact, observable cost.
-          </p>
+          <div className="p-4">
+            <div className="bg-[#0a0a0a] p-4 border border-[#262626] mono text-center text-lg mb-4">
+              C(T, M, t) = S(T, M) * D(M, t)
+            </div>
+            <p className="text-[#737373] text-sm">
+              Total expected cost equals spot cost times the decay factor. At spot (t = 0),
+              D = 1 and you get the exact, observable cost.
+            </p>
+          </div>
         </section>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Ticker Price β</h2>
-          <p className="text-text-secondary mb-4">
-            The anchor of the model: β is the published output token price at the origin provider,
-            in USD per million tokens ($/M).
-          </p>
-          <ul className="list-disc list-inside text-text-secondary space-y-2">
-            <li><strong className="text-text-primary">MODEL</strong> - Sync output reference price</li>
-            <li><strong className="text-text-primary">MODEL.B</strong> - Batch output price</li>
-          </ul>
+        {/* Ticker Price */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">Ticker Price beta</h2>
+          </div>
+          <div className="p-4">
+            <p className="text-[#737373] text-sm mb-4">
+              The anchor of the model: beta is the published output token price at the origin provider,
+              in USD per million tokens ($/M).
+            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex gap-4">
+                <span className="mono text-[#06b6d4]">MODEL</span>
+                <span className="text-[#737373]">Sync output reference price</span>
+              </div>
+              <div className="flex gap-4">
+                <span className="mono text-[#06b6d4]">MODEL.B</span>
+                <span className="text-[#737373]">Batch output price</span>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Structural Greeks</h2>
-          <div className="overflow-x-auto">
+        {/* Structural Greeks */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">Structural Greeks</h2>
+          </div>
+          <div className="p-4">
             <table className="data-table text-sm">
               <thead>
                 <tr>
@@ -40,80 +59,114 @@ export default function MethodologyPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="font-mono">r_in</td>
+                  <td className="mono text-[#06b6d4]">r_in</td>
                   <td>Input/output price ratio</td>
-                  <td>0.20 – 0.50</td>
+                  <td>0.20 - 0.50</td>
                 </tr>
                 <tr>
-                  <td className="font-mono">r_cache</td>
+                  <td className="mono text-[#06b6d4]">r_cache</td>
                   <td>Cache price as fraction of output</td>
-                  <td>0.01 – 0.10</td>
+                  <td>0.01 - 0.10</td>
                 </tr>
                 <tr>
-                  <td className="font-mono">r_think</td>
+                  <td className="mono text-[#06b6d4]">r_think</td>
                   <td>Thinking token price ratio</td>
-                  <td>0.50 – 1.00+</td>
+                  <td>0.50 - 1.00+</td>
                 </tr>
                 <tr>
-                  <td className="font-mono">r_batch</td>
+                  <td className="mono text-[#06b6d4]">r_batch</td>
                   <td>Batch discount ratio</td>
-                  <td>0.40 – 0.60</td>
+                  <td>0.40 - 0.60</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Effective Input Rate</h2>
-          <div className="card bg-surface-light p-6 font-mono text-center mb-4">
-            r̄_in_eff = r_in_depth × (1 - η) + r_cache × η
+        {/* Effective Input Rate */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">Effective Input Rate</h2>
           </div>
-          <p className="text-text-secondary">
-            Combines context-depth pricing (for tiered pricing models) with cache discounts.
-            η is your cache hit ratio (0 to 1).
-          </p>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">κ (Kappa) - The Task's Delta</h2>
-          <div className="card bg-surface-light p-6 font-mono text-center mb-4">
-            κ = 1 + (n_in / n_out) × r̄_in_eff
-          </div>
-          <p className="text-text-secondary">
-            κ is both the context cost multiplier and your delta to β movements.
-            If β moves by $1/M, your task cost moves by κ × n_out × 10⁻⁶.
-          </p>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Spot Cost</h2>
-          <div className="card bg-surface-light p-6 font-mono text-center mb-4">
-            S = β × [n_out + n_in × r̄_in_eff + n_think × r_think] × 10⁻⁶
+          <div className="p-4">
+            <div className="bg-[#0a0a0a] p-4 border border-[#262626] mono text-center mb-4">
+              r_in_eff = r_in_depth * (1 - eta) + r_cache * eta
+            </div>
+            <p className="text-[#737373] text-sm">
+              Combines context-depth pricing (for tiered pricing models) with cache discounts.
+              eta is your cache hit ratio (0 to 1).
+            </p>
           </div>
         </section>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Decay Rate θ</h2>
-          <p className="text-text-secondary mb-4">
-            θ is the continuous monthly decay rate, estimated from historical price data.
-            It absorbs all sources of price decline into a single continuous rate.
-          </p>
-          <ul className="list-disc list-inside text-text-secondary space-y-2">
-            <li><strong className="text-text-primary">θ {'>'} 0</strong>: Price declining (typical)</li>
-            <li><strong className="text-text-primary">θ ≈ 0</strong>: Stable pricing</li>
-            <li><strong className="text-text-primary">θ {'<'} 0</strong>: Price increasing (rare)</li>
-          </ul>
+        {/* Kappa */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">kappa - The Task's Delta</h2>
+          </div>
+          <div className="p-4">
+            <div className="bg-[#0a0a0a] p-4 border border-[#262626] mono text-center mb-4">
+              kappa = 1 + (n_in / n_out) * r_in_eff
+            </div>
+            <p className="text-[#737373] text-sm">
+              kappa is both the context cost multiplier and your delta to beta movements.
+              If beta moves by $1/M, your task cost moves by kappa * n_out * 10^-6.
+            </p>
+          </div>
         </section>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Forward Price</h2>
-          <div className="card bg-surface-light p-6 font-mono text-center mb-4">
-            β_fwd(M, t) = β(M) × e^(-θ(M) × t)
+        {/* Spot Cost */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">Spot Cost</h2>
           </div>
-          <p className="text-text-secondary">
-            Published at standard tenors: 1M, 3M, 6M.
-          </p>
+          <div className="p-4">
+            <div className="bg-[#0a0a0a] p-4 border border-[#262626] mono text-center mb-4">
+              S = beta * [n_out + n_in * r_in_eff + n_think * r_think] * 10^-6
+            </div>
+          </div>
+        </section>
+
+        {/* Decay Rate */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">Decay Rate theta</h2>
+          </div>
+          <div className="p-4">
+            <p className="text-[#737373] text-sm mb-4">
+              theta is the continuous monthly decay rate, estimated from historical price data.
+              It absorbs all sources of price decline into a single continuous rate.
+            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex gap-4">
+                <span className="mono text-[#22c55e]">theta {'>'} 0</span>
+                <span className="text-[#737373]">Price declining (typical)</span>
+              </div>
+              <div className="flex gap-4">
+                <span className="mono text-[#737373]">theta = 0</span>
+                <span className="text-[#737373]">Stable pricing</span>
+              </div>
+              <div className="flex gap-4">
+                <span className="mono text-[#ef4444]">theta {'<'} 0</span>
+                <span className="text-[#737373]">Price increasing (rare)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Forward Price */}
+        <section className="terminal-box">
+          <div className="p-4 border-b border-[#262626]">
+            <h2 className="mono text-sm">Forward Price</h2>
+          </div>
+          <div className="p-4">
+            <div className="bg-[#0a0a0a] p-4 border border-[#262626] mono text-center mb-4">
+              beta_fwd(M, t) = beta(M) * e^(-theta(M) * t)
+            </div>
+            <p className="text-[#737373] text-sm">
+              Published at standard tenors: 1M, 3M, 6M.
+            </p>
+          </div>
         </section>
       </div>
     </div>

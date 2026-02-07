@@ -6,7 +6,8 @@
 
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import { logger } from 'hono/logger';
+import { logger as honoLogger } from 'hono/logger';
+import { logger } from '../core/logger.js';
 import 'dotenv/config';
 
 // Middleware
@@ -30,7 +31,7 @@ import { refreshOracleState } from './oracle.js';
 const app = new Hono();
 
 // Global middleware
-app.use('*', logger());
+app.use('*', honoLogger());
 app.use('*', corsMiddleware);
 app.use('*', rateLimitMiddleware);
 app.use('*', cacheMiddleware);
@@ -75,7 +76,8 @@ app.notFound((c) => {
 
 // Error handler
 app.onError((err, c) => {
-  console.error('API Error:', err);
+  const serverLogger = logger.child({ component: 'server' });
+  serverLogger.error('API error', { error: err.message });
   return c.json({
     error: 'Internal server error',
   }, 500);
@@ -85,31 +87,37 @@ const port = parseInt(process.env.PORT || '8080', 10);
 
 // Initialize and start server
 async function start() {
-  console.log('Initializing oracle state...');
+  const serverLogger = logger.child({ component: 'server' });
+
+  serverLogger.info('Initializing oracle state');
   await refreshOracleState();
-  console.log('Oracle state loaded');
+  serverLogger.info('Oracle state loaded');
 
   serve({
     fetch: app.fetch,
     port,
   });
 
-  console.log(`Exostream API running on port ${port}`);
-  console.log('Endpoints:');
-  console.log('  GET  /health');
-  console.log('  GET  /v1/spots');
-  console.log('  GET  /v1/spots/:ticker');
-  console.log('  GET  /v1/greeks');
-  console.log('  GET  /v1/greeks/:ticker');
-  console.log('  GET  /v1/forwards/:ticker');
-  console.log('  POST /v1/price');
-  console.log('  POST /v1/compare');
-  console.log('  GET  /v1/history/:ticker');
-  console.log('  GET  /v1/events');
+  serverLogger.info('Server started', {
+    port,
+    endpoints: [
+      '/health',
+      '/v1/spots',
+      '/v1/spots/:ticker',
+      '/v1/greeks',
+      '/v1/greeks/:ticker',
+      '/v1/forwards/:ticker',
+      'POST /v1/price',
+      'POST /v1/compare',
+      '/v1/history/:ticker',
+      '/v1/events'
+    ]
+  });
 }
 
 start().catch(err => {
-  console.error('Failed to start server:', err);
+  const serverLogger = logger.child({ component: 'server' });
+  serverLogger.error('Failed to start server', { error: err.message });
   process.exit(1);
 });
 

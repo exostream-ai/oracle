@@ -7,6 +7,7 @@
 
 import { getClientOrNull } from '@/db/client.js';
 import type { GreekSheet, ForwardPrice, OracleState, ContextTier } from '@/core/types.js';
+import { logger } from '../core/logger.js';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -195,11 +196,12 @@ export async function getOracleState(): Promise<OracleState> {
  * Force refresh the oracle state from database or seed files
  */
 export async function refreshOracleState(): Promise<void> {
+  const oracleLogger = logger.child({ component: 'oracle' });
   const sql = getClientOrNull();
 
   if (!sql) {
     // No database - load from seed files
-    console.log('No database connection - loading from seed files');
+    oracleLogger.info('No database connection - loading from seed files');
     oracleState = loadFromSeed();
     lastRefresh = new Date();
     return;
@@ -210,7 +212,7 @@ export async function refreshOracleState(): Promise<void> {
 
   if (greekRows.length === 0) {
     // Database exists but no data - load from seed files
-    console.log('Database empty - loading from seed files');
+    oracleLogger.info('Database empty - loading from seed files');
     oracleState = loadFromSeed();
     lastRefresh = new Date();
     return;

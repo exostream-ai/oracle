@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import type { Env, ApiKeyData } from '../worker-types.js';
 import { generateApiKey } from '../worker-state.js';
+import { logger } from '../../core/logger.js';
 
+const keysLogger = logger.child({ component: 'keys-route' });
 const keys = new Hono<{ Bindings: Env }>();
 
 // POST /v1/keys - Generate a new API key (worker.ts lines 660-693)
@@ -35,7 +37,9 @@ keys.post('/', async (c) => {
       message: 'Store this key securely - it cannot be retrieved later.',
     }, 201);
   } catch (error) {
-    console.error('Error creating API key:', error);
+    keysLogger.error('Failed to create API key', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     return c.json({ error: 'Failed to create API key' }, 500);
   }
 });
@@ -66,7 +70,9 @@ keys.get('/usage', async (c) => {
       rate_limit: `${keyData.rateLimit} requests/minute`,
     });
   } catch (error) {
-    console.error('Error fetching API key usage:', error);
+    keysLogger.error('Failed to fetch API key usage', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     return c.json({ error: 'Failed to fetch usage' }, 500);
   }
 });
@@ -95,7 +101,9 @@ keys.delete('/', async (c) => {
       message: 'API key revoked',
     });
   } catch (error) {
-    console.error('Error revoking API key:', error);
+    keysLogger.error('Failed to revoke API key', {
+      error: error instanceof Error ? error.message : String(error)
+    });
     return c.json({ error: 'Failed to revoke API key' }, 500);
   }
 });

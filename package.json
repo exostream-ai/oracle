@@ -6,7 +6,8 @@
   "main": "dist/api/index.js",
   "scripts": {
     "dev": "tsx watch src/api/index.ts",
-    "build": "tsc && tsc-alias",
+    "build:oracle": "tsx src/scripts/build-oracle.ts",
+    "build": "npm run build:oracle && tsc && tsc-alias",
     "start": "node dist/api/index.js",
     "scrape": "tsx src/scrapers/index.ts",
     "recompute": "tsx src/engine/index.ts",

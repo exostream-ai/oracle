@@ -2,6 +2,11 @@ name = "exostream-api"
 main = "src/api/worker.ts"
 compatibility_date = "2024-01-01"
 
+# Custom build - pre-compute oracle state before bundling
+[build]
+command = "npm run build:oracle"
+watch_dirs = ["seed"]
+
 # Custom domain routing
 routes = [
   { pattern = "api.exostream.ai", custom_domain = true }

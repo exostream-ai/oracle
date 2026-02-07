@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import type { Env } from '../worker-types.js';
 import { oracleState, tickerIndex } from '../worker-state.js';
+import { logger } from '../../core/logger.js';
 
+const forwardsLogger = logger.child({ component: 'forwards-route' });
 const forwards = new Hono<{ Bindings: Env }>();
 
 // GET /v1/forwards/:ticker - Get forward curve for ticker (worker.ts lines 397-421)

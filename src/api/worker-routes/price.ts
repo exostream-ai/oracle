@@ -3,12 +3,20 @@ import type { Env } from '../worker-types.js';
 import { oracleState, tickerIndex, modelContextTiers } from '../worker-state.js';
 import { effectiveInputRate, kappa as computeKappa, spotCost as computeSpotCost, forwardPrice as computeForwardPrice, decayFactor as computeDecayFactor } from '../../core/pricing.js';
 import type { GreekSheet } from '../../core/types.js';
+import { logger } from '../../core/logger.js';
 
+const priceLogger = logger.child({ component: 'price-route' });
 const price = new Hono<{ Bindings: Env }>();
 
 // POST /v1/price - Calculate task price (worker.ts lines 424-534)
 price.post('/', async (c) => {
-  const body = await c.req.json();
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    priceLogger.warn('Invalid JSON in request body');
+    return c.json({ error: 'Invalid JSON in request body' }, 400);
+  }
   const { model: modelParam, modelId, ticker, n_in, n_out, n_think, eta = 0, horizon_months } = body;
   // Support both camelCase and snake_case parameter names
   const nIn = n_in ?? body.nIn;

@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import type { Env, SeedModel, SeedPrice } from '../worker-types.js';
 import { oracleState, tickerIndex, familyLineage, historicalPrices, seedModels } from '../worker-state.js';
+import { logger } from '../../core/logger.js';
 
+const historyLogger = logger.child({ component: 'history-route' });
 const history = new Hono<{ Bindings: Env }>();
 
 // GET /v1/history/:ticker - Get price history (worker.ts lines 607-653)

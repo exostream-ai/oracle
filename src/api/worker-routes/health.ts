@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import type { Env } from '../worker-types.js';
 import { oracleState } from '../worker-state.js';
+import { logger } from '../../core/logger.js';
 
+const healthLogger = logger.child({ component: 'health-route' });
 const health = new Hono<{ Bindings: Env }>();
 
 // Health check - worker.ts lines 287-294

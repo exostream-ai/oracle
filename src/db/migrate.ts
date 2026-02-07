@@ -3,52 +3,54 @@ import { migrate } from 'postgres-migrations';
 import { Client } from 'pg';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { logger } from '../core/logger.js';
 import 'dotenv/config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const migrateLogger = logger.child({ component: 'migrations' });
 
-async function runMigrations() {
+/**
+ * Run database migrations. Exported for use by the API server on startup.
+ * Requires DATABASE_URL environment variable to be set.
+ */
+export async function runMigrations(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    console.error('ERROR: DATABASE_URL environment variable is not set');
-    console.error('Please set DATABASE_URL in your .env file or environment');
-    process.exit(1);
+    throw new Error('DATABASE_URL environment variable is not set');
   }
 
-  console.log('Connecting to database...');
+  migrateLogger.info('Connecting to database');
   const client = new Client({ connectionString: databaseUrl });
 
   try {
     await client.connect();
-    console.log('Database connection established');
+    migrateLogger.info('Database connection established');
 
     const migrationsDirectory = join(__dirname, 'migrations');
-    console.log(`Running migrations from: ${migrationsDirectory}`);
-
     const applied = await migrate({ client }, migrationsDirectory);
 
     if (applied.length === 0) {
-      console.log('No new migrations to apply - database is up to date');
+      migrateLogger.info('No new migrations to apply — database is up to date');
     } else {
-      console.log(`Successfully applied ${applied.length} migration(s):`);
-      applied.forEach((migration) => {
-        console.log(`  ✓ ${migration.name}`);
+      migrateLogger.info(`Applied ${applied.length} migration(s)`, {
+        migrations: applied.map((m) => m.name),
       });
     }
-
-    console.log('\nMigration completed successfully');
-  } catch (error) {
-    console.error('\nMigration failed:');
-    console.error(error);
+  } catch (error: any) {
+    migrateLogger.error('Migration failed', { error: error.message });
     throw error;
   } finally {
     await client.end();
-    console.log('Database connection closed');
+    migrateLogger.debug('Database connection closed');
   }
 }
 
-runMigrations().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// CLI entrypoint: auto-run when executed directly (tsx src/db/migrate.ts)
+const isDirectRun = process.argv[1]?.includes('migrate');
+if (isDirectRun) {
+  runMigrations().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

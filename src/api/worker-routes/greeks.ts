@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import type { Env } from '../worker-types.js';
 import { oracleState, tickerIndex } from '../worker-state.js';
+import { logger } from '../../core/logger.js';
 
+const greeksLogger = logger.child({ component: 'greeks-route' });
 const greeks = new Hono<{ Bindings: Env }>();
 
 // GET /v1/greeks - List all Greek sheets (worker.ts lines 360-383)

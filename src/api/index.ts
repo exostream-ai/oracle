@@ -28,6 +28,9 @@ import events from './routes/events.js';
 // Initialize oracle state
 import { refreshOracleState } from './oracle.js';
 
+// Database migrations
+import { runMigrations } from '../db/migrate.js';
+
 const app = new Hono();
 
 // Global middleware
@@ -88,6 +91,15 @@ const port = parseInt(process.env.PORT || '8080', 10);
 // Initialize and start server
 async function start() {
   const serverLogger = logger.child({ component: 'server' });
+
+  // Run database migrations if DATABASE_URL is configured
+  if (process.env.DATABASE_URL) {
+    serverLogger.info('Running database migrations');
+    await runMigrations();
+    serverLogger.info('Database migrations complete');
+  } else {
+    serverLogger.warn('DATABASE_URL not set — skipping migrations');
+  }
 
   serverLogger.info('Initializing oracle state');
   await refreshOracleState();

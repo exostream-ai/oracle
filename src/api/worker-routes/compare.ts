@@ -2,12 +2,20 @@ import { Hono } from 'hono';
 import type { Env } from '../worker-types.js';
 import { oracleState, tickerIndex, modelContextTiers } from '../worker-state.js';
 import { effectiveInputRate, kappa as computeKappa, spotCost as computeSpotCost } from '../../core/pricing.js';
+import { logger } from '../../core/logger.js';
 
+const compareLogger = logger.child({ component: 'compare-route' });
 const compare = new Hono<{ Bindings: Env }>();
 
 // POST /v1/compare - Compare multiple models (worker.ts lines 537-604)
 compare.post('/', async (c) => {
-  const body = await c.req.json();
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    compareLogger.warn('Invalid JSON in request body');
+    return c.json({ error: 'Invalid JSON in request body' }, 400);
+  }
   const { models: modelIds } = body;
   // Support both camelCase and snake_case parameter names
   const nIn = body.n_in ?? body.nIn ?? 0;

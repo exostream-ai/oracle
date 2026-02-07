@@ -1,7 +1,9 @@
 import { Hono } from 'hono';
 import type { Env } from '../worker-types.js';
 import { oracleState, tickerIndex } from '../worker-state.js';
+import { logger } from '../../core/logger.js';
 
+const spotsLogger = logger.child({ component: 'spots-route' });
 const spots = new Hono<{ Bindings: Env }>();
 
 // GET /v1/spots - List all spot prices (worker.ts lines 322-338)

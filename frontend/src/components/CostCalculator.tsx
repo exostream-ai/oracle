@@ -35,6 +35,7 @@ export default function CostCalculator({ models, defaultModel }: CostCalculatorP
   const [horizon, setHorizon] = useState(3);
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [calcError, setCalcError] = useState<string | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>('rag');
 
   // Set default model to OPUS-4.5 if available
@@ -51,6 +52,7 @@ export default function CostCalculator({ models, defaultModel }: CostCalculatorP
 
     const calculate = async () => {
       setLoading(true);
+      setCalcError(null);
       try {
         const response = await priceTask({
           model,
@@ -61,8 +63,10 @@ export default function CostCalculator({ models, defaultModel }: CostCalculatorP
           horizon_months: horizon > 0 ? horizon : undefined,
         });
         setResult(response.data);
-      } catch {
+      } catch (err) {
+        console.error('Failed to calculate price:', err);
         setResult(null);
+        setCalcError('Calculation failed. Try again.');
       } finally {
         setLoading(false);
       }
@@ -213,6 +217,8 @@ export default function CostCalculator({ models, defaultModel }: CostCalculatorP
                 <div className="h-10 bg-[#1a1a1a] loading-pulse" />
                 <div className="h-6 bg-[#1a1a1a] loading-pulse w-2/3" />
               </div>
+            ) : calcError ? (
+              <div className="text-[#ef4444] mono text-sm">{calcError}</div>
             ) : result ? (
               <div className="space-y-3">
                 {/* Spot Cost */}

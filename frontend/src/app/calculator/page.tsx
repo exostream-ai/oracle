@@ -1,25 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CostCalculator from '@/components/CostCalculator';
 import { getGreeks, type GreekData } from '@/lib/api';
 
 export default function CalculatorPage() {
   const [models, setModels] = useState<GreekData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const retryCountRef = useRef(0);
 
   useEffect(() => {
     async function fetchModels() {
       try {
         const response = await getGreeks();
         setModels(response.data);
-      } catch {}
-      finally {
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load pricing data:', err);
+        if (retryCountRef.current === 0) {
+          // Silent retry on first failure
+          retryCountRef.current++;
+          fetchModels();
+          return;
+        }
+        setError('Failed to load pricing data.');
+      } finally {
         setLoading(false);
       }
     }
     fetchModels();
   }, []);
+
+  const handleRetry = () => {
+    setError(null);
+    setLoading(true);
+    retryCountRef.current = 0;
+    window.location.reload();
+  };
 
   return (
     <div className="max-w-[1000px] mx-auto px-6 py-8">
@@ -33,6 +51,13 @@ export default function CalculatorPage() {
       {loading ? (
         <div className="terminal-box p-6">
           <div className="h-64 bg-[#1a1a1a] loading-pulse" />
+        </div>
+      ) : error ? (
+        <div className="terminal-box p-6 text-center">
+          <p className="text-[#ef4444] mono mb-2">{error}</p>
+          <button onClick={handleRetry} className="text-[#06b6d4] mono text-sm hover:underline">
+            Retry
+          </button>
         </div>
       ) : (
         <CostCalculator models={models} />

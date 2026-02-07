@@ -26,6 +26,8 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [forwardsError, setForwardsError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -44,12 +46,18 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
         try {
           const forwardsResponse = await getForwards(foundModel.ticker);
           setForwards(forwardsResponse.data.forwards);
-        } catch {}
+        } catch (err) {
+          console.error('Failed to load forwards:', err);
+          setForwardsError('Failed to load forward curve.');
+        }
 
         try {
           const historyResponse = await getHistory(foundModel.ticker);
           setHistory(historyResponse.data.prices);
-        } catch {}
+        } catch (err) {
+          console.error('Failed to load history:', err);
+          setHistoryError('Failed to load price history.');
+        }
 
         setLoading(false);
       } catch (err) {
@@ -170,7 +178,11 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
 
       {/* Charts */}
       <div className="grid grid-cols-2 gap-6">
-        {model.beta_sync && model.theta !== undefined && (
+        {forwardsError ? (
+          <div className="terminal-box p-4 text-center">
+            <p className="text-[#ef4444] mono text-sm">{forwardsError}</p>
+          </div>
+        ) : model.beta_sync && model.theta !== undefined && (
           <ForwardCurve
             spot={model.beta_sync}
             forwards={forwards}
@@ -178,7 +190,11 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
             ticker={model.ticker}
           />
         )}
-        {history.length > 0 && (
+        {historyError ? (
+          <div className="terminal-box p-4 text-center">
+            <p className="text-[#ef4444] mono text-sm">{historyError}</p>
+          </div>
+        ) : history.length > 0 && (
           <HistoryChart prices={history} ticker={model.ticker} />
         )}
       </div>

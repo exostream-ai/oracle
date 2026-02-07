@@ -6,10 +6,12 @@
  */
 
 import { BaseScraper, type ScrapedPricing, type ScrapedModelPricing } from './base.js';
+import { logger } from '../core/logger.js';
 
 export class DeepSeekScraper extends BaseScraper {
   providerId = 'deepseek';
   targetUrl = 'https://api-docs.deepseek.com/quick_start/pricing';
+  protected log = logger.child({ component: 'scraper:deepseek' });
 
   async scrape(): Promise<ScrapedPricing> {
     const { html } = await this.fetchPage(this.targetUrl);
@@ -57,7 +59,7 @@ export class DeepSeekScraper extends BaseScraper {
       }
 
       if (!modelConfig) {
-        console.warn(`[DeepSeek] Unknown model name: ${modelNameRaw}`);
+        this.log.warn('Unknown model name', { name: modelNameRaw });
         return;
       }
 
@@ -113,13 +115,16 @@ export class DeepSeekScraper extends BaseScraper {
           }
         }
       } catch (error) {
-        console.warn(`[DeepSeek] Failed to parse prices for ${modelConfig.displayName}:`, error instanceof Error ? error.message : String(error));
+        this.log.warn('Failed to parse prices', {
+          model: modelConfig.displayName,
+          error: error instanceof Error ? error.message : String(error)
+        });
         return;
       }
 
       // Validate extracted prices
       if (!outputPrice || outputPrice <= 0 || outputPrice > 100) {
-        console.warn(`[DeepSeek] Invalid output price for ${modelConfig.displayName}: ${outputPrice}`);
+        this.log.warn('Invalid output price', { model: modelConfig.displayName, price: outputPrice });
         return;
       }
 

@@ -4,6 +4,7 @@
 
 import * as cheerio from 'cheerio';
 import { getClientOrNull } from '@/db/client.js';
+import { logger } from '../core/logger.js';
 
 /**
  * Structured output from a provider scraper
@@ -56,6 +57,7 @@ export interface FetchResult {
 export abstract class BaseScraper {
   abstract providerId: string;
   abstract targetUrl: string;
+  protected log = logger.child({ component: 'scraper' });
 
   /**
    * Fetch and parse pricing data from the provider
@@ -136,7 +138,7 @@ export abstract class BaseScraper {
   protected async logScrape(entry: ScrapeLogEntry): Promise<number | null> {
     const sql = getClientOrNull();
     if (!sql) {
-      console.log(`[${this.providerId}] Scrape: ${entry.status}`);
+      this.log.info('Scrape complete', { provider: this.providerId, status: entry.status });
       return null;
     }
 
@@ -281,7 +283,7 @@ export abstract class BaseScraper {
       // Try fallback before giving up
       const fallback = this.getFallbackPricing();
       if (fallback) {
-        console.warn(`[${this.providerId}] Scrape failed (${errorMsg}), using fallback pricing`);
+        this.log.warn('Scrape failed, using fallback', { provider: this.providerId, error: errorMsg });
 
         const logEntry: ScrapeLogEntry = {
           providerId: this.providerId,

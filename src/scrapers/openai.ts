@@ -9,6 +9,7 @@
 import { chromium } from 'playwright-extra';
 import StealthPlugin from 'playwright-extra-plugin-stealth';
 import { BaseScraper, type ScrapedPricing, type ScrapedModelPricing } from './base.js';
+import { logger } from '../core/logger.js';
 
 // Use stealth plugin to avoid bot detection
 chromium.use(StealthPlugin());
@@ -131,6 +132,7 @@ const FALLBACK_MODELS: ScrapedModelPricing[] = [
 export class OpenAIScraper extends BaseScraper {
   providerId = 'openai';
   targetUrl = 'https://openai.com/api/pricing';
+  protected log = logger.child({ component: 'scraper:openai' });
 
   /**
    * Provide fallback pricing when scraping fails
@@ -170,7 +172,7 @@ export class OpenAIScraper extends BaseScraper {
           timeout: 10000,
         });
       } catch (error) {
-        console.warn('[OpenAI] Pricing selector not found, proceeding with current content');
+        this.log.warn('Pricing selector not found, proceeding with current content');
       }
 
       // Get rendered HTML

@@ -9,6 +9,9 @@ import { computeAllSigmas, type SigmaEstimate } from './sigma.js';
 import { computeAllForwardCurves, saveForwardCurves, type ForwardCurve } from './forwards.js';
 import { detectAllPriceChanges, savePriceEvents, type PriceEvent } from './events.js';
 import { getClientOrNull } from '@/db/client.js';
+import { logger } from '../core/logger.js';
+
+const engineLogger = logger.child({ component: 'engine' });
 
 export interface RecomputeResult {
   thetaEstimates: ThetaEstimate[];
@@ -22,21 +25,21 @@ export interface RecomputeResult {
  * Recompute all oracle parameters
  */
 export async function recomputeAll(): Promise<RecomputeResult> {
-  console.log('Starting oracle recomputation...');
+  engineLogger.info('Starting oracle recomputation');
   const computedAt = new Date();
 
   // 1. Estimate theta for all models
-  console.log('Estimating theta values...');
+  engineLogger.info('Estimating theta values');
   const thetaEstimates = await estimateAllThetas();
-  console.log(`  Computed theta for ${thetaEstimates.length} models`);
+  engineLogger.info('Theta estimation complete', { count: thetaEstimates.length });
 
   // 2. Compute sigma for all models
-  console.log('Computing sigma values...');
+  engineLogger.info('Computing sigma values');
   const sigmaEstimates = await computeAllSigmas();
-  console.log(`  Computed sigma for ${sigmaEstimates.length} models`);
+  engineLogger.info('Sigma computation complete', { count: sigmaEstimates.length });
 
   // 3. Save extrinsic params to database
-  console.log('Saving extrinsic parameters...');
+  engineLogger.info('Saving extrinsic parameters');
   const sql = getClientOrNull();
   if (sql) {
     for (const theta of thetaEstimates) {
@@ -53,23 +56,23 @@ export async function recomputeAll(): Promise<RecomputeResult> {
   }
 
   // 4. Compute forward curves
-  console.log('Computing forward curves...');
+  engineLogger.info('Computing forward curves');
   const forwardCurves = await computeAllForwardCurves();
-  console.log(`  Computed ${forwardCurves.length} forward curves`);
+  engineLogger.info('Forward curves computed', { count: forwardCurves.length });
 
   // 5. Save forward curves
-  console.log('Saving forward curves...');
+  engineLogger.info('Saving forward curves');
   await saveForwardCurves(forwardCurves);
 
   // 6. Detect price changes
-  console.log('Detecting price changes...');
+  engineLogger.info('Detecting price changes');
   const priceEvents = await detectAllPriceChanges();
-  console.log(`  Detected ${priceEvents.length} price events`);
+  engineLogger.info('Price events detected', { count: priceEvents.length });
 
   // 7. Save price events
   await savePriceEvents(priceEvents);
 
-  console.log('Oracle recomputation complete');
+  engineLogger.info('Oracle recomputation complete');
 
   return {
     thetaEstimates,
@@ -84,14 +87,17 @@ export async function recomputeAll(): Promise<RecomputeResult> {
 if (import.meta.url === `file://${process.argv[1]}`) {
   recomputeAll()
     .then(result => {
-      console.log('\nSummary:');
-      console.log(`  Theta estimates: ${result.thetaEstimates.length}`);
-      console.log(`  Sigma estimates: ${result.sigmaEstimates.length}`);
-      console.log(`  Forward curves: ${result.forwardCurves.length}`);
-      console.log(`  Price events: ${result.priceEvents.length}`);
+      engineLogger.info('Summary', {
+        theta_estimates: result.thetaEstimates.length,
+        sigma_estimates: result.sigmaEstimates.length,
+        forward_curves: result.forwardCurves.length,
+        price_events: result.priceEvents.length
+      });
     })
     .catch(err => {
-      console.error('Recomputation failed:', err);
+      engineLogger.error('Recomputation failed', {
+        error: err instanceof Error ? err.message : String(err)
+      });
       process.exit(1);
     });
 }

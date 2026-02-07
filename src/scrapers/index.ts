@@ -14,6 +14,9 @@ import { xaiScraper } from './xai.js';
 import { mistralScraper } from './mistral.js';
 import { deepseekScraper } from './deepseek.js';
 import type { BaseScraper, ScrapedPricing, ScrapeLogEntry } from './base.js';
+import { logger } from '../core/logger.js';
+
+const scraperLogger = logger.child({ component: 'scraper-runner' });
 
 /**
  * All registered scrapers
@@ -47,9 +50,13 @@ export async function runAllScrapers(): Promise<ScraperRunResult[]> {
 
   for (const scraper of scrapers) {
     try {
-      console.log(`[${scraper.providerId}] Starting scrape...`);
+      scraperLogger.info('Starting scrape', { provider: scraper.providerId });
       const { pricing, logEntry } = await scraper.run();
-      console.log(`[${scraper.providerId}] Success: ${pricing.models.length} models, status=${logEntry.status}`);
+      scraperLogger.info('Scrape success', {
+        provider: scraper.providerId,
+        models: pricing.models.length,
+        status: logEntry.status
+      });
       results.push({
         providerId: scraper.providerId,
         success: true,
@@ -58,7 +65,7 @@ export async function runAllScrapers(): Promise<ScraperRunResult[]> {
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`[${scraper.providerId}] Failed: ${errorMsg}`);
+      scraperLogger.error('Scrape failed', { provider: scraper.providerId, error: errorMsg });
       results.push({
         providerId: scraper.providerId,
         success: false,
@@ -70,7 +77,7 @@ export async function runAllScrapers(): Promise<ScraperRunResult[]> {
   // Summary
   const successful = results.filter(r => r.success).length;
   const failed = results.filter(r => !r.success).length;
-  console.log(`\nScrape complete: ${successful} succeeded, ${failed} failed`);
+  scraperLogger.info('All scrapes complete', { successful, failed });
 
   return results;
 }
@@ -85,7 +92,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       }
     })
     .catch(err => {
-      console.error('Fatal error:', err);
+      scraperLogger.error('Fatal error', {
+        error: err instanceof Error ? err.message : String(err)
+      });
       process.exit(1);
     });
 }

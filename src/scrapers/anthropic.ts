@@ -5,10 +5,12 @@
  */
 
 import { BaseScraper, type ScrapedPricing, type ScrapedModelPricing } from './base.js';
+import { logger } from '../core/logger.js';
 
 export class AnthropicScraper extends BaseScraper {
   providerId = 'anthropic';
   targetUrl = 'https://www.anthropic.com/pricing';
+  protected log = logger.child({ component: 'scraper:anthropic' });
 
   /**
    * Convert display name to model ID
@@ -130,13 +132,16 @@ export class AnthropicScraper extends BaseScraper {
         }
 
       } catch (error) {
-        console.warn(`[Anthropic] Failed to parse prices for ${modelId}:`, error instanceof Error ? error.message : String(error));
+        this.log.warn('Failed to parse prices', {
+          model: modelId,
+          error: error instanceof Error ? error.message : String(error)
+        });
         return;
       }
 
       // Validate
       if (!outputPrice || outputPrice <= 0 || outputPrice > 200) {
-        console.warn(`[Anthropic] Invalid output price for ${modelId}: ${outputPrice}`);
+        this.log.warn('Invalid output price', { model: modelId, price: outputPrice });
         return;
       }
 

@@ -5,10 +5,12 @@
  */
 
 import { BaseScraper, type ScrapedPricing, type ScrapedModelPricing } from './base.js';
+import { logger } from '../core/logger.js';
 
 export class XAIScraper extends BaseScraper {
   providerId = 'xai';
   targetUrl = 'https://docs.x.ai/docs/models';
+  protected log = logger.child({ component: 'scraper:xai' });
 
   async scrape(): Promise<ScrapedPricing> {
     const { html } = await this.fetchPage(this.targetUrl);
@@ -125,13 +127,16 @@ export class XAIScraper extends BaseScraper {
             thinkPrice = parseFloat(thinkMatch[1]);
           }
         } catch (error) {
-          console.warn(`[xAI] Failed to parse prices for ${modelId}:`, error instanceof Error ? error.message : String(error));
+          this.log.warn('Failed to parse prices', {
+            model: modelId,
+            error: error instanceof Error ? error.message : String(error)
+          });
           return;
         }
 
         // Validate prices
         if (!outputPrice || outputPrice <= 0 || outputPrice > 100) {
-          console.warn(`[xAI] Invalid output price for ${modelId}: ${outputPrice}`);
+          this.log.warn('Invalid output price', { model: modelId, price: outputPrice });
           return;
         }
 

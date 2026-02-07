@@ -6,10 +6,12 @@
  */
 
 import { BaseScraper, type ScrapedPricing, type ScrapedModelPricing } from './base.js';
+import { logger } from '../core/logger.js';
 
 export class GoogleScraper extends BaseScraper {
   providerId = 'google';
   targetUrl = 'https://cloud.google.com/vertex-ai/generative-ai/pricing';
+  protected log = logger.child({ component: 'scraper:google' });
 
   async scrape(): Promise<ScrapedPricing> {
     const { html } = await this.fetchPage(this.targetUrl);
@@ -150,13 +152,16 @@ export class GoogleScraper extends BaseScraper {
           if (thinkMatch) thinkPrice = parseFloat(thinkMatch[1]);
 
         } catch (error) {
-          console.warn(`[Google] Failed to parse prices for ${modelId}:`, error instanceof Error ? error.message : String(error));
+          this.log.warn('Failed to parse prices', {
+            model: modelId,
+            error: error instanceof Error ? error.message : String(error)
+          });
           return;
         }
 
         // Validate
         if (!outputPrice || outputPrice <= 0 || outputPrice > 100) {
-          console.warn(`[Google] Invalid output price for ${modelId}: ${outputPrice}`);
+          this.log.warn('Invalid output price', { model: modelId, price: outputPrice });
           return;
         }
 

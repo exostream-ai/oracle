@@ -8,6 +8,7 @@
 import { chromium } from 'playwright-extra';
 import StealthPlugin from 'playwright-extra-plugin-stealth';
 import { BaseScraper, type ScrapedPricing, type ScrapedModelPricing } from './base.js';
+import { logger } from '../core/logger.js';
 
 // Use stealth plugin for consistency
 chromium.use(StealthPlugin());
@@ -34,6 +35,7 @@ const FALLBACK_MODELS: ScrapedModelPricing[] = [
 export class MistralScraper extends BaseScraper {
   providerId = 'mistral';
   targetUrl = 'https://mistral.ai/pricing';
+  protected log = logger.child({ component: 'scraper:mistral' });
 
   /**
    * Provide fallback pricing when scraping fails
@@ -69,7 +71,7 @@ export class MistralScraper extends BaseScraper {
           timeout: 10000,
         });
       } catch (error) {
-        console.warn('[Mistral] Pricing selector not found, proceeding with current content');
+        this.log.warn('Pricing selector not found, proceeding with current content');
       }
 
       // Get rendered HTML
@@ -147,12 +149,12 @@ export class MistralScraper extends BaseScraper {
 
         // Validate extracted prices
         if (!outputPrice || outputPrice <= 0 || outputPrice > 100) {
-          console.warn(`[Mistral] Invalid output price for ${modelName}: ${outputPrice}`);
+          this.log.warn('Invalid output price', { model: modelName, price: outputPrice });
           return;
         }
 
         if (!inputPrice || inputPrice <= 0) {
-          console.warn(`[Mistral] Invalid input price for ${modelName}: ${inputPrice}`);
+          this.log.warn('Invalid input price', { model: modelName, price: inputPrice });
           return;
         }
 

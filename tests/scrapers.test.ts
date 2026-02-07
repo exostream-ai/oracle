@@ -490,9 +490,137 @@ describe('OpenAIScraper', () => {
     expect(modelIds).toContain('gpt-5-mini');
   });
 
-  // Note: OpenAI uses Playwright, so actual scraping tests would require
-  // mocking the browser. The fallback tests verify the safety net works.
-  // HTML parsing portion is currently marked TODO in the scraper.
+  it('extracts correct models from fixture HTML', async () => {
+    const { OpenAIScraper } = await import('@/scrapers/openai.js');
+    const { chromium } = await import('playwright-extra');
+    const scraper = new OpenAIScraper();
+    const html = loadFixture('openai-pricing.html');
+
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
+
+    const result = await scraper.scrape();
+
+    expect(result.providerId).toBe('openai');
+    // Fixture has: 3 GPT-4.1 + 2 GPT-4o + 2 o-series + 4 GPT-5 = 11 models
+    expect(result.models.length).toBeGreaterThanOrEqual(11);
+
+    // Check model IDs extracted
+    const modelIds = result.models.map(m => m.modelId);
+    expect(modelIds).toContain('gpt-4.1');
+    expect(modelIds).toContain('gpt-4.1-mini');
+    expect(modelIds).toContain('gpt-4.1-nano');
+    expect(modelIds).toContain('gpt-4o');
+    expect(modelIds).toContain('gpt-4o-mini');
+    expect(modelIds).toContain('o3');
+    expect(modelIds).toContain('o4-mini');
+    expect(modelIds).toContain('gpt-5');
+    expect(modelIds).toContain('gpt-5.1');
+    expect(modelIds).toContain('gpt-5.2');
+    expect(modelIds).toContain('gpt-5-mini');
+  });
+
+  it('extracts correct pricing values from fixture', async () => {
+    const { OpenAIScraper } = await import('@/scrapers/openai.js');
+    const { chromium } = await import('playwright-extra');
+    const scraper = new OpenAIScraper();
+    const html = loadFixture('openai-pricing.html');
+
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
+
+    const result = await scraper.scrape();
+
+    // GPT-4.1: $8.00 output, $2.00 input -> betaSync=8.0, rIn=0.25
+    const gpt41 = result.models.find(m => m.modelId === 'gpt-4.1');
+    expect(gpt41).toBeDefined();
+    if (gpt41) {
+      expect(gpt41.betaSync).toBeCloseTo(8.0, 1);
+      expect(gpt41.rIn).toBeCloseTo(0.25, 2);
+      expect(gpt41.rCache).toBeCloseTo(0.0625, 4); // $0.50 / $8.00
+      expect(gpt41.betaBatch).toBeCloseTo(2.0, 1);
+    }
+
+    // o3: $40.00 output, $10.67 input, $24.00 reasoning
+    const o3 = result.models.find(m => m.modelId === 'o3');
+    expect(o3).toBeDefined();
+    if (o3) {
+      expect(o3.betaSync).toBeCloseTo(40.0, 1);
+      expect(o3.rIn).toBeCloseTo(0.267, 2); // 10.67 / 40.00
+      expect(o3.rThink).toBeDefined();
+      expect(o3.rThink).toBeGreaterThan(0);
+      expect(o3.rThink).toBeCloseTo(0.60, 2); // 24.00 / 40.00
+    }
+
+    // GPT-5: $20.00 output, $5.00 input
+    const gpt5 = result.models.find(m => m.modelId === 'gpt-5');
+    expect(gpt5).toBeDefined();
+    if (gpt5) {
+      expect(gpt5.betaSync).toBeCloseTo(20.0, 1);
+      expect(gpt5.rIn).toBeCloseTo(0.25, 2); // 5.00 / 20.00
+      expect(gpt5.betaBatch).toBeCloseTo(10.0, 1);
+    }
+  });
+
+  it('validates all extracted models have required fields', async () => {
+    const { OpenAIScraper } = await import('@/scrapers/openai.js');
+    const { chromium } = await import('playwright-extra');
+    const scraper = new OpenAIScraper();
+    const html = loadFixture('openai-pricing.html');
+
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
+
+    const result = await scraper.scrape();
+
+    // Verify all models have valid structure
+    for (const model of result.models) {
+      expect(model.modelId).toBeTruthy();
+      expect(model.displayName).toBeTruthy();
+      expect(model.betaSync).toBeGreaterThan(0);
+      expect(model.rIn).toBeGreaterThan(0);
+      expect(model.contextWindow).toBeGreaterThan(0);
+
+      // betaSync should be reasonable for OpenAI
+      expect(model.betaSync).toBeLessThan(100);
+    }
+  });
 });
 
 // ============================================================
@@ -513,6 +641,7 @@ describe('MistralScraper', () => {
     // Check fallback models
     const modelIds = fallback.models.map((m: any) => m.modelId);
     expect(modelIds).toContain('mistral-large');
+    expect(modelIds).toContain('mistral-medium');
   });
 
   it('fallback pricing has valid structure', async () => {
@@ -533,7 +662,7 @@ describe('MistralScraper', () => {
     }
   });
 
-  it('fallback includes Mistral Large', async () => {
+  it('fallback includes Mistral Large and Mistral Medium', async () => {
     const { MistralScraper } = await import('@/scrapers/mistral.js');
     const scraper = new MistralScraper();
     const fallback = (scraper as any).getFallbackPricing();
@@ -542,11 +671,112 @@ describe('MistralScraper', () => {
     expect(mistralLarge).toBeDefined();
     expect(mistralLarge.betaSync).toBeCloseTo(12.0, 1);
     expect(mistralLarge.rIn).toBeCloseTo(0.50, 2);
+
+    const mistralMedium = fallback.models.find((m: any) => m.modelId === 'mistral-medium');
+    expect(mistralMedium).toBeDefined();
+    expect(mistralMedium.betaSync).toBeCloseTo(8.10, 2);
+    expect(mistralMedium.rIn).toBeCloseTo(0.333, 3);
   });
 
-  // Note: Mistral uses Playwright, so actual scraping tests would require
-  // mocking the browser. The fallback tests verify the safety net works.
-  // HTML parsing portion is currently marked TODO in the scraper.
+  it('extracts correct models from fixture HTML', async () => {
+    const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const scraper = new MistralScraper();
+    const html = loadFixture('mistral-pricing.html');
+
+    // Mock parseHtml to return the fixture HTML
+    const $ = scraper['parseHtml'](html);
+    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+
+    const result = await scraper.scrape();
+
+    expect(result.providerId).toBe('mistral');
+    expect(result.models.length).toBeGreaterThanOrEqual(2);
+
+    // Check model IDs extracted
+    const modelIds = result.models.map(m => m.modelId);
+    expect(modelIds).toContain('mistral-large');
+    expect(modelIds).toContain('mistral-medium');
+
+    // Should NOT include coming-soon models
+    expect(modelIds).not.toContain('mistral-small');
+  });
+
+  it('extracts correct pricing values from fixture', async () => {
+    const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const scraper = new MistralScraper();
+    const html = loadFixture('mistral-pricing.html');
+
+    // Mock parseHtml to return the fixture HTML
+    const $ = scraper['parseHtml'](html);
+    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+
+    const result = await scraper.scrape();
+
+    // Mistral Large: Table-based pricing
+    // Input: $6.00, Output: $12.00, Cache: $0.60
+    const mistralLarge = result.models.find(m => m.modelId === 'mistral-large');
+    expect(mistralLarge).toBeDefined();
+    if (mistralLarge) {
+      expect(mistralLarge.betaSync).toBeCloseTo(12.0, 1);
+      expect(mistralLarge.rIn).toBeCloseTo(0.5, 2); // 6.00 / 12.00
+      expect(mistralLarge.rCache).toBeCloseTo(0.05, 2); // 0.60 / 12.00
+    }
+
+    // Mistral Medium: Text-based pricing
+    // Input: $2.70, Output: $8.10
+    const mistralMedium = result.models.find(m => m.modelId === 'mistral-medium');
+    expect(mistralMedium).toBeDefined();
+    if (mistralMedium) {
+      expect(mistralMedium.betaSync).toBeCloseTo(8.1, 1);
+      expect(mistralMedium.rIn).toBeCloseTo(0.333, 2); // 2.70 / 8.10
+    }
+  });
+
+  it('validates all extracted models have valid pricing', async () => {
+    const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const scraper = new MistralScraper();
+    const html = loadFixture('mistral-pricing.html');
+
+    // Mock parseHtml to return the fixture HTML
+    const $ = scraper['parseHtml'](html);
+    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+
+    const result = await scraper.scrape();
+
+    for (const model of result.models) {
+      // All models should have positive betaSync
+      expect(model.betaSync).toBeGreaterThan(0);
+      expect(model.betaSync).toBeLessThan(100);
+
+      // rIn should be positive and reasonable
+      expect(model.rIn).toBeGreaterThan(0);
+      expect(model.rIn).toBeLessThan(1);
+
+      // Context window should be set
+      expect(model.contextWindow).toBeGreaterThan(0);
+
+      // Model ID should be valid
+      expect(model.modelId).toBeTruthy();
+      expect(model.displayName).toBeTruthy();
+    }
+  });
+
+  it('returns valid ScrapedPricing structure', async () => {
+    const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const scraper = new MistralScraper();
+    const html = loadFixture('mistral-pricing.html');
+
+    // Mock parseHtml to return the fixture HTML
+    const $ = scraper['parseHtml'](html);
+    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+
+    const result = await scraper.scrape();
+
+    expect(result.providerId).toBe('mistral');
+    expect(result.scrapedAt).toBeInstanceOf(Date);
+    expect(Array.isArray(result.models)).toBe(true);
+    expect(result.models.length).toBeGreaterThan(0);
+  });
 });
 
 // ============================================================

@@ -6,6 +6,12 @@ import { AppErrorBoundary } from '@/components/ErrorBoundary';
 export const metadata: Metadata = {
   title: 'Exostream - The Pricing Oracle for LLM Inference',
   description: 'Canonical price feeds, forward curves, and Greek sheets for the cost of intelligence.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export default function RootLayout({

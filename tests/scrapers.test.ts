@@ -680,12 +680,24 @@ describe('MistralScraper', () => {
 
   it('extracts correct models from fixture HTML', async () => {
     const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const { chromium } = await import('playwright-extra');
     const scraper = new MistralScraper();
     const html = loadFixture('mistral-pricing.html');
 
-    // Mock parseHtml to return the fixture HTML
-    const $ = scraper['parseHtml'](html);
-    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
 
     const result = await scraper.scrape();
 
@@ -703,12 +715,24 @@ describe('MistralScraper', () => {
 
   it('extracts correct pricing values from fixture', async () => {
     const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const { chromium } = await import('playwright-extra');
     const scraper = new MistralScraper();
     const html = loadFixture('mistral-pricing.html');
 
-    // Mock parseHtml to return the fixture HTML
-    const $ = scraper['parseHtml'](html);
-    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
 
     const result = await scraper.scrape();
 
@@ -734,12 +758,24 @@ describe('MistralScraper', () => {
 
   it('validates all extracted models have valid pricing', async () => {
     const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const { chromium } = await import('playwright-extra');
     const scraper = new MistralScraper();
     const html = loadFixture('mistral-pricing.html');
 
-    // Mock parseHtml to return the fixture HTML
-    const $ = scraper['parseHtml'](html);
-    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
 
     const result = await scraper.scrape();
 
@@ -763,12 +799,24 @@ describe('MistralScraper', () => {
 
   it('returns valid ScrapedPricing structure', async () => {
     const { MistralScraper } = await import('@/scrapers/mistral.js');
+    const { chromium } = await import('playwright-extra');
     const scraper = new MistralScraper();
     const html = loadFixture('mistral-pricing.html');
 
-    // Mock parseHtml to return the fixture HTML
-    const $ = scraper['parseHtml'](html);
-    vi.spyOn(scraper as any, 'parseHtml').mockReturnValue($);
+    // Mock Playwright browser chain
+    const mockPage = {
+      goto: vi.fn().mockResolvedValue(undefined),
+      waitForSelector: vi.fn().mockResolvedValue(undefined),
+      content: vi.fn().mockResolvedValue(html),
+    };
+    const mockContext = {
+      newPage: vi.fn().mockResolvedValue(mockPage),
+    };
+    const mockBrowser = {
+      newContext: vi.fn().mockResolvedValue(mockContext),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.spyOn(chromium, 'launch').mockResolvedValue(mockBrowser as any);
 
     const result = await scraper.scrape();
 

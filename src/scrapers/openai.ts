@@ -181,37 +181,205 @@ export class OpenAIScraper extends BaseScraper {
 
       // Extract model pricing from rendered HTML
       const models: ScrapedModelPricing[] = [];
+      const scrapedAt = new Date();
 
-      // OpenAI pricing page structure varies - try to find pricing tables/sections
-      // Look for model names and associated pricing
-      // This is a placeholder - actual parsing depends on current page structure
+      // Helper to normalize model names to IDs
+      const toModelId = (name: string): string => {
+        return name.toLowerCase()
+          .replace(/\s+mini$/i, '-mini')
+          .replace(/\s+nano$/i, '-nano');
+      };
 
-      // For now, if we successfully loaded the page, try to extract data
-      // If extraction fails, throw to trigger fallback
-      const pageText = $('body').text();
+      // Parse each model family section
+      $('section.model-family').each((_, section) => {
+        const sectionEl = $(section);
+        const familyName = sectionEl.find('h2').first().text().trim();
 
-      // Very basic check: does the page contain expected model names?
-      const hasGPT4 = pageText.includes('GPT-4') || pageText.includes('gpt-4');
-      const hasO3 = pageText.includes('o3') || pageText.includes('O3');
+        if (familyName.includes('GPT-4.1')) {
+          // GPT-4.1 Series: Standard table with 5 columns (Model, Input, Cached, Output, Batch)
+          const rows = sectionEl.find('table.pricing-table tbody tr');
+          rows.each((_, row) => {
+            const cells = $(row).find('td');
+            if (cells.length < 5) return;
 
-      if (!hasGPT4 && !hasO3) {
-        throw new Error('Pricing page does not contain expected model information');
-      }
+            const modelName = cells.eq(0).text().trim();
+            const inputPrice = this.parsePrice(cells.eq(1).text());
+            const cachePrice = this.parsePrice(cells.eq(2).text());
+            const outputPrice = this.parsePrice(cells.eq(3).text());
+            const batchPrice = this.parsePrice(cells.eq(4).text());
 
-      // TODO: Implement actual HTML parsing based on current page structure
-      // For now, throw to use fallback (the page structure needs inspection)
-      throw new Error('HTML parsing not yet implemented - using fallback');
+            if (outputPrice > 0) {
+              models.push({
+                modelId: toModelId(modelName),
+                displayName: modelName,
+                betaSync: outputPrice,
+                betaBatch: batchPrice > 0 ? batchPrice : undefined,
+                rIn: inputPrice / outputPrice,
+                rCache: cachePrice > 0 ? cachePrice / outputPrice : undefined,
+                contextWindow: 1000000,
+              });
+            }
+          });
+        } else if (familyName.includes('GPT-4o')) {
+          // GPT-4o: Table rows with pipe-delimited pricing in second cell
+          const rows = sectionEl.find('table tr').slice(1); // Skip header
+          rows.each((_, row) => {
+            const cells = $(row).find('td');
+            if (cells.length < 2) return;
+
+            const modelName = cells.eq(0).text().trim();
+            const pricingText = cells.eq(1).text();
+
+            // Parse pipe-delimited: "Input: $X | Cache: $Y | Output: $Z | Batch: $W"
+            const inputMatch = pricingText.match(/Input:\s*\$?([\d.]+)/i);
+            const cacheMatch = pricingText.match(/Cache:\s*\$?([\d.]+)/i);
+            const outputMatch = pricingText.match(/Output:\s*\$?([\d.]+)/i);
+            const batchMatch = pricingText.match(/Batch:\s*\$?([\d.]+)/i);
+
+            if (outputMatch) {
+              const outputPrice = parseFloat(outputMatch[1]);
+              const inputPrice = inputMatch ? parseFloat(inputMatch[1]) : 0;
+              const cachePrice = cacheMatch ? parseFloat(cacheMatch[1]) : 0;
+              const batchPrice = batchMatch ? parseFloat(batchMatch[1]) : 0;
+
+              models.push({
+                modelId: toModelId(modelName),
+                displayName: modelName,
+                betaSync: outputPrice,
+                betaBatch: batchPrice > 0 ? batchPrice : undefined,
+                rIn: inputPrice / outputPrice,
+                rCache: cachePrice > 0 ? cachePrice / outputPrice : undefined,
+                contextWindow: 128000,
+              });
+            }
+          });
+        } else if (familyName.includes('o-series') || familyName.includes('Reasoning')) {
+          // o-series: Model cards with different structures
+          sectionEl.find('div.model-card').each((_, card) => {
+            const cardEl = $(card);
+            const modelName = cardEl.find('h3').first().text().trim();
+
+            // Check if this card uses div.price-item structure
+            const priceItems = cardEl.find('div.price-item');
+            if (priceItems.length > 0) {
+              // o3 structure: div.price-item with text like "Output tokens: $40.00 / 1M"
+              let inputPrice = 0;
+              let cachePrice = 0;
+              let outputPrice = 0;
+              let reasoningPrice = 0;
+
+              priceItems.each((_, item) => {
+                const text = $(item).text();
+                if (text.includes('Input')) {
+                  inputPrice = this.parsePrice(text);
+                } else if (text.includes('Cache')) {
+                  cachePrice = this.parsePrice(text);
+                } else if (text.includes('Output')) {
+                  outputPrice = this.parsePrice(text);
+                } else if (text.includes('Reasoning')) {
+                  reasoningPrice = this.parsePrice(text);
+                }
+              });
+
+              if (outputPrice > 0) {
+                models.push({
+                  modelId: toModelId(modelName),
+                  displayName: modelName,
+                  betaSync: outputPrice,
+                  rIn: inputPrice / outputPrice,
+                  rCache: cachePrice > 0 ? cachePrice / outputPrice : undefined,
+                  rThink: reasoningPrice > 0 ? reasoningPrice / outputPrice : undefined,
+                  contextWindow: 200000,
+                });
+              }
+            } else {
+              // o4-mini structure: table with rows
+              const table = cardEl.find('table');
+              if (table.length > 0) {
+                let inputPrice = 0;
+                let cachePrice = 0;
+                let outputPrice = 0;
+                let reasoningPrice = 0;
+
+                table.find('tr').each((_, row) => {
+                  const cells = $(row).find('td');
+                  if (cells.length >= 2) {
+                    const label = cells.eq(0).text().trim().toLowerCase();
+                    const priceStr = cells.eq(1).text();
+
+                    if (label.includes('input')) {
+                      inputPrice = this.parsePrice(priceStr);
+                    } else if (label.includes('cache')) {
+                      cachePrice = this.parsePrice(priceStr);
+                    } else if (label.includes('output')) {
+                      outputPrice = this.parsePrice(priceStr);
+                    } else if (label.includes('reasoning')) {
+                      reasoningPrice = this.parsePrice(priceStr);
+                    }
+                  }
+                });
+
+                if (outputPrice > 0) {
+                  models.push({
+                    modelId: toModelId(modelName),
+                    displayName: modelName,
+                    betaSync: outputPrice,
+                    rIn: inputPrice / outputPrice,
+                    rCache: cachePrice > 0 ? cachePrice / outputPrice : undefined,
+                    rThink: reasoningPrice > 0 ? reasoningPrice / outputPrice : undefined,
+                    contextWindow: 200000,
+                  });
+                }
+              }
+            }
+          });
+        } else if (familyName.includes('GPT-5')) {
+          // GPT-5 Series: Table with slash-delimited pricing "$X / $Y / $Z"
+          const rows = sectionEl.find('table.pricing-table tbody tr');
+          rows.each((_, row) => {
+            const cells = $(row).find('td');
+            if (cells.length < 2) return;
+
+            const modelName = cells.eq(0).text().trim();
+            const pricingText = cells.eq(1).text();
+
+            // Parse slash-delimited: "$5.00 / $20.00 / $10.00"
+            const prices = pricingText.split('/').map(p => {
+              try {
+                return this.parsePrice(p.trim());
+              } catch {
+                return 0;
+              }
+            });
+
+            if (prices.length >= 2 && prices[1] > 0) {
+              const inputPrice = prices[0];
+              const outputPrice = prices[1];
+              const batchPrice = prices.length >= 3 ? prices[2] : 0;
+
+              models.push({
+                modelId: toModelId(modelName),
+                displayName: modelName,
+                betaSync: outputPrice,
+                betaBatch: batchPrice > 0 ? batchPrice : undefined,
+                rIn: inputPrice / outputPrice,
+                contextWindow: 2000000,
+              });
+            }
+          });
+        }
+      });
 
       // Validate: throw if no models extracted
-      // if (models.length === 0) {
-      //   throw new Error('No models extracted from pricing page');
-      // }
+      if (models.length === 0) {
+        throw new Error('No models extracted from pricing page');
+      }
 
-      // return {
-      //   providerId: this.providerId,
-      //   scrapedAt: new Date(),
-      //   models,
-      // };
+      return {
+        providerId: this.providerId,
+        scrapedAt,
+        models,
+      };
     } finally {
       // CRITICAL: Always close browser to prevent process leaks
       if (browser) {

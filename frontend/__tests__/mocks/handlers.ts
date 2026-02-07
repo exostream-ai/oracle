@@ -20,11 +20,18 @@ export const handlers = [
     return HttpResponse.json(wrapResponse(mockGreeks));
   }),
 
-  // GET /v1/greeks/:ticker - single model
+  // GET /v1/greeks/:ticker - single model (by ticker)
   http.get(`${API_BASE}/v1/greeks/:ticker`, ({ params }) => {
     const { ticker } = params;
-    const model = mockGreeks.find((m) => m.ticker === ticker) || mockGreeks[0];
-    return HttpResponse.json(wrapResponse({ data: model }));
+    // Check if it's a ticker or model_id
+    const model = mockGreeks.find((m) => m.ticker === ticker || m.model_id === ticker);
+    if (!model) {
+      return HttpResponse.json({ error: 'Model not found' }, { status: 404 });
+    }
+    // For EmbedTicker direct fetch, return model without wrapper
+    // For api.ts client fetch, it expects wrapped response
+    // We'll return unwrapped for simplicity (EmbedTicker use case)
+    return HttpResponse.json(model);
   }),
 
   // GET /v1/forwards/:ticker

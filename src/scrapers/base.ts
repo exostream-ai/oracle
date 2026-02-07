@@ -12,6 +12,7 @@ export interface ScrapedPricing {
   providerId: string;
   scrapedAt: Date;
   models: ScrapedModelPricing[];
+  isFallback?: boolean;  // true when using cached/hardcoded fallback values
 }
 
 export interface ScrapedModelPricing {
@@ -226,6 +227,14 @@ export abstract class BaseScraper {
   }
 
   /**
+   * Get fallback pricing data when scraping fails
+   * Subclasses override this to provide cached/hardcoded values
+   */
+  protected getFallbackPricing(): ScrapedPricing | null {
+    return null;  // Subclasses override to provide fallback values
+  }
+
+  /**
    * Run the full scrape pipeline
    */
   async run(): Promise<{ pricing: ScrapedPricing; logEntry: ScrapeLogEntry }> {
@@ -267,11 +276,32 @@ export abstract class BaseScraper {
 
       return { pricing, logEntry };
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      // Try fallback before giving up
+      const fallback = this.getFallbackPricing();
+      if (fallback) {
+        console.warn(`[${this.providerId}] Scrape failed (${errorMsg}), using fallback pricing`);
+
+        const logEntry: ScrapeLogEntry = {
+          providerId: this.providerId,
+          targetUrl: this.targetUrl,
+          status: 'failure',
+          errorMessage: `Fallback used: ${errorMsg}`,
+          durationMs: Date.now() - startTime,
+          scrapedAt,
+        };
+        await this.logScrape(logEntry);
+
+        return { pricing: fallback, logEntry };
+      }
+
+      // No fallback available, re-throw
       const logEntry: ScrapeLogEntry = {
         providerId: this.providerId,
         targetUrl: this.targetUrl,
         status: 'failure',
-        errorMessage: error instanceof Error ? error.message : String(error),
+        errorMessage: errorMsg,
         durationMs: Date.now() - startTime,
         scrapedAt,
       };

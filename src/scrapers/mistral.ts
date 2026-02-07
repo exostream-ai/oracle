@@ -22,6 +22,13 @@ const FALLBACK_MODELS: ScrapedModelPricing[] = [
     rCache: 0.05,
     contextWindow: 128000,
   },
+  {
+    modelId: 'mistral-medium',
+    displayName: 'Mistral Medium',
+    betaSync: 8.10,    // $8.10/M output
+    rIn: 0.333,        // $2.70/M input = 0.333 * $8.10
+    contextWindow: 128000,
+  },
 ];
 
 export class MistralScraper extends BaseScraper {
@@ -74,35 +81,109 @@ export class MistralScraper extends BaseScraper {
       // Extract model pricing from rendered HTML
       const models: ScrapedModelPricing[] = [];
 
-      // Mistral pricing page structure - try to find pricing tables/sections
-      // Look for model names and associated pricing
-      // This is a placeholder - actual parsing depends on current page structure
+      // Mistral pricing page has model sections
+      // Two parsing patterns needed:
+      // 1. Table-based pricing (Mistral Large)
+      // 2. Text-based pricing (Mistral Medium)
 
-      // For now, if we successfully loaded the page, try to extract data
-      // If extraction fails, throw to trigger fallback
-      const pageText = $('body').text();
+      $('section.model-section').each((i, section) => {
+        const $section = $(section);
 
-      // Very basic check: does the page contain expected model names?
-      const hasMistral = pageText.includes('Mistral') || pageText.includes('mistral');
+        // Skip coming-soon models
+        if ($section.hasClass('coming-soon') || $section.text().toLowerCase().includes('coming soon')) {
+          return;
+        }
 
-      if (!hasMistral) {
-        throw new Error('Pricing page does not contain expected model information');
-      }
+        // Get model name from h2
+        const modelName = $section.find('h2').first().text().trim();
+        if (!modelName) return;
 
-      // TODO: Implement actual HTML parsing based on current page structure
-      // For now, throw to use fallback (the page structure needs inspection)
-      throw new Error('HTML parsing not yet implemented - using fallback');
+        // Convert model name to ID (lowercase, replace spaces with hyphens)
+        const modelId = modelName.toLowerCase().replace(/\s+/g, '-');
+
+        let inputPrice = 0;
+        let outputPrice = 0;
+        let cachePrice: number | undefined;
+
+        // Pattern 1: Table-based pricing
+        const $priceTable = $section.find('table.price-table');
+        if ($priceTable.length > 0) {
+          $priceTable.find('tbody tr').each((j, row) => {
+            const $row = $(row);
+            const label = $row.find('td').eq(0).text().toLowerCase();
+            const priceText = $row.find('td').eq(1).text();
+            const price = this.parsePrice(priceText);
+
+            if (label.includes('input')) {
+              inputPrice = price;
+            } else if (label.includes('output')) {
+              outputPrice = price;
+            } else if (label.includes('cache')) {
+              cachePrice = price;
+            }
+          });
+        } else {
+          // Pattern 2: Text-based pricing
+          const $priceInfo = $section.find('.price-info');
+          if ($priceInfo.length > 0) {
+            const priceText = $priceInfo.text();
+
+            // Parse with regex: "Input: $2.70 / M tokens"
+            const inputMatch = priceText.match(/(Input|input):\s*\$?([\d.]+)/);
+            const outputMatch = priceText.match(/(Output|output):\s*\$?([\d.]+)/);
+            const cacheMatch = priceText.match(/(Cache|cache):\s*\$?([\d.]+)/);
+
+            if (inputMatch) {
+              inputPrice = parseFloat(inputMatch[2]);
+            }
+            if (outputMatch) {
+              outputPrice = parseFloat(outputMatch[2]);
+            }
+            if (cacheMatch) {
+              cachePrice = parseFloat(cacheMatch[2]);
+            }
+          }
+        }
+
+        // Validate extracted prices
+        if (!outputPrice || outputPrice <= 0 || outputPrice > 100) {
+          console.warn(`[Mistral] Invalid output price for ${modelName}: ${outputPrice}`);
+          return;
+        }
+
+        if (!inputPrice || inputPrice <= 0) {
+          console.warn(`[Mistral] Invalid input price for ${modelName}: ${inputPrice}`);
+          return;
+        }
+
+        const betaSync = outputPrice;
+        const rIn = inputPrice / betaSync;
+
+        const modelPricing: ScrapedModelPricing = {
+          modelId,
+          displayName: modelName,
+          betaSync,
+          rIn,
+          contextWindow: 128000,
+        };
+
+        if (cachePrice && cachePrice > 0) {
+          modelPricing.rCache = cachePrice / betaSync;
+        }
+
+        models.push(modelPricing);
+      });
 
       // Validate: throw if no models extracted
-      // if (models.length === 0) {
-      //   throw new Error('No models extracted from pricing page');
-      // }
+      if (models.length === 0) {
+        throw new Error('No models extracted from pricing page');
+      }
 
-      // return {
-      //   providerId: this.providerId,
-      //   scrapedAt: new Date(),
-      //   models,
-      // };
+      return {
+        providerId: this.providerId,
+        scrapedAt: new Date(),
+        models,
+      };
     } finally {
       // CRITICAL: Always close browser to prevent process leaks
       if (browser) {

@@ -55,10 +55,20 @@ export interface SeedPrice {
   source: string;
 }
 
+// Scraped price from a provider page or fallback
+export interface ScrapedPrice {
+  model_id: string;
+  price_type: 'sync' | 'batch';
+  beta: number;
+  source: string;
+  observed_at: string;
+}
+
 // Worker scrape result type
 export interface WorkerScrapeResult {
   provider: string;
   status: 'success' | 'error' | 'skipped';
   modelsExtracted?: number;
+  prices?: ScrapedPrice[];
   error?: string;
 }

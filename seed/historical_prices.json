@@ -446,5 +446,85 @@
     "source": "historical:public-record",
     "observed_at": "2026-01-01T00:00:00Z",
     "effective_from": "2026-01-01T00:00:00Z"
+  },
+  {
+    "model_id": "opus-4.5",
+    "price_type": "sync",
+    "beta": 25.00,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "opus-4.5",
+    "price_type": "batch",
+    "beta": 12.50,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "o3",
+    "price_type": "sync",
+    "beta": 8.00,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-10-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.5-flash",
+    "price_type": "sync",
+    "beta": 2.50,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-09-01T00:00:00Z"
+  },
+  {
+    "model_id": "gemini-2.5-flash",
+    "price_type": "batch",
+    "beta": 0.625,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-09-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-3",
+    "price_type": "sync",
+    "beta": 15.00,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-08-01T00:00:00Z"
+  },
+  {
+    "model_id": "grok-3-mini",
+    "price_type": "sync",
+    "beta": 0.50,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-08-01T00:00:00Z"
+  },
+  {
+    "model_id": "deepseek-v3",
+    "price_type": "sync",
+    "beta": 0.42,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-12-01T00:00:00Z"
+  },
+  {
+    "model_id": "deepseek-r1",
+    "price_type": "sync",
+    "beta": 0.42,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-09-29T00:00:00Z"
+  },
+  {
+    "model_id": "mistral-large",
+    "price_type": "sync",
+    "beta": 1.50,
+    "source": "audit:2026-02-12",
+    "observed_at": "2026-02-12T00:00:00Z",
+    "effective_from": "2025-12-04T00:00:00Z"
   }
 ]

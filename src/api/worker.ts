@@ -12,6 +12,7 @@ import type { Env } from './worker-types.js';
 
 // Importing worker-state triggers initializeOracleState() at module scope (cold start)
 import './worker-state.js';
+import { patchOracleWithPrices, kvPricesLoaded, markKvPricesLoaded } from './worker-state.js';
 
 // Middleware
 import { workerCors } from './worker-middleware/cors.js';
@@ -67,6 +68,27 @@ const app = new Hono<{ Bindings: Env }>();
 app.use('*', honoLogger());
 app.use('*', workerCors);
 
+// KV refresh middleware - loads scraped prices from KV on first request per isolate
+app.use('/v1/*', async (c, next) => {
+  if (!kvPricesLoaded) {
+    try {
+      const stored = await c.env.API_KEYS.get('scraped_prices');
+      if (stored) {
+        const { prices } = JSON.parse(stored);
+        patchOracleWithPrices(prices);
+      }
+    } catch {
+      // Non-fatal: seed prices are still valid
+    }
+    // patchOracleWithPrices sets kvPricesLoaded = true when prices are applied;
+    // if KV was empty we still mark it to avoid re-reading on every request
+    if (!kvPricesLoaded) {
+      markKvPricesLoaded();
+    }
+  }
+  await next();
+});
+
 // Rate limiting and API key tracking for /v1/* routes
 app.use('/v1/*', rateLimitMiddleware);
 app.use('/v1/*', apiKeyMiddleware);
@@ -108,25 +130,29 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     cronLogger.info('Scraper run complete', { successful, failed, skipped });
 
     for (const result of results) {
-      if (result.status === 'success') {
-        cronLogger.info('Scraper result', {
-          provider: result.provider,
-          status: result.status,
-          modelsExtracted: result.modelsExtracted
-        });
-      } else if (result.status === 'skipped') {
-        cronLogger.info('Scraper result', {
-          provider: result.provider,
-          status: result.status,
-          error: result.error
-        });
-      } else {
-        cronLogger.info('Scraper result', {
-          provider: result.provider,
-          status: result.status,
-          error: result.error
-        });
-      }
+      cronLogger.info('Scraper result', {
+        provider: result.provider,
+        status: result.status,
+        modelsExtracted: result.modelsExtracted,
+        pricesExtracted: result.prices?.length ?? 0,
+        error: result.error,
+      });
+    }
+
+    // Collect all scraped prices and persist to KV
+    const allPrices = results.flatMap(r => r.prices || []);
+
+    if (allPrices.length > 0) {
+      await env.API_KEYS.put('scraped_prices', JSON.stringify({
+        prices: allPrices,
+        updated_at: new Date().toISOString(),
+      }), { expirationTtl: 86400 * 7 }); // 7 day TTL
+
+      // Patch in-memory oracle state
+      patchOracleWithPrices(allPrices);
+      cronLogger.info('Oracle state patched with scraped prices', {
+        total_prices: allPrices.length,
+      });
     }
 
     // Track consecutive failures and emit alerts
@@ -141,7 +167,7 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         cronLogger.error('Scrape failure threshold exceeded', {
           provider: result.provider,
           consecutive_failures: failureCount,
-          alert: true  // Flag for external monitoring/log filtering
+          alert: true
         });
       }
     }
@@ -149,7 +175,7 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // Check oracle state staleness
     const { oracleState } = await import('./worker-state.js');
     const oracleAge = Date.now() - oracleState.lastUpdate.getTime();
-    const staleThresholdMs = 24 * 60 * 60 * 1000; // 24 hours
+    const staleThresholdMs = 48 * 60 * 60 * 1000; // 48 hours (daily cron + buffer)
     if (oracleAge > staleThresholdMs) {
       cronLogger.error('Oracle state is stale', {
         age_hours: Math.round(oracleAge / (60 * 60 * 1000)),

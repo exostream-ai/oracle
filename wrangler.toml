@@ -21,6 +21,6 @@ binding = "API_KEYS"
 id = "373c616070b24744b64b56b718643374"
 
 # Cron Triggers for scheduled scraper runs
-# Runs every hour at minute 0
+# Runs daily at 6:00 UTC
 [triggers]
-crons = ["0 * * * *"]
+crons = ["0 6 * * *"]

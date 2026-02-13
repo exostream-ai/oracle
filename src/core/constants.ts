@@ -58,6 +58,7 @@ export const FAMILY_LINEAGE: Record<string, string[]> = {
   'o-series': ['o-series'],
   'claude-4': ['claude-3-opus', 'opus-4.5', 'opus-4.6'],
   'claude-3.5': ['claude-3.5', 'sonnet-3.5', 'sonnet-4'],
+  'claude-3': ['haiku-3', 'opus-3'],
   'gemini-2.5-pro': ['gemini-2.5-pro'],
   'gemini-2.5-flash': ['gemini-2.5-flash'],
   'gemini-2.0': ['gemini-2.0'],
@@ -83,9 +84,12 @@ export const DEFAULT_THETA: Record<string, number> = {
   'o-series': 0.04,     // Reasoning models - newer, less history
   'claude-4': 0.05,     // Claude Opus: $75→$45 over 11mo
   'claude-3.5': 0.02,   // Sonnet stable since launch
+  'claude-3': 0.02,     // Legacy Claude 3 models - stable pricing
   'gemini-2.5-pro': 0.06,
   'gemini-2.5-flash': 0.06,
   'gemini-2.0': 0.05,
+  'grok-4': 0.03,       // Grok 4 - newer generation
+  'grok-4-fast': 0.04,  // Grok 4 Fast variant
   'grok-3': 0.03,       // New, less history
   'mistral-large': 0.12, // Aggressive: $24→$12 over 5mo
   'deepseek-v3': 0.02,  // Already very cheap
@@ -107,9 +111,12 @@ export const DEFAULT_SIGMA: Record<string, number> = {
   'o-series': 0.06,
   'claude-4': 0.08,
   'claude-3.5': 0.04,
+  'claude-3': 0.04,
   'gemini-2.5-pro': 0.08,
   'gemini-2.5-flash': 0.08,
   'gemini-2.0': 0.06,
+  'grok-4': 0.05,
+  'grok-4-fast': 0.06,
   'grok-3': 0.05,
   'mistral-large': 0.15,
   'deepseek-v3': 0.03,

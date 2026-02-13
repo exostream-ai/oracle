@@ -296,7 +296,7 @@
   },
   {
     "model_id": "grok-3-mini",
-    "family_id": "grok-3",
+    "family_id": "grok-3-mini",
     "display_name": "Grok 3 mini",
     "ticker_sync": "GROK-3-MINI",
     "ticker_batch": "GROK-3-MINI.B",

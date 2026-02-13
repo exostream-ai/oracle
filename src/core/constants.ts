@@ -63,13 +63,14 @@ export const FAMILY_LINEAGE: Record<string, string[]> = {
   'gemini-2.5-flash': ['gemini-2.5-flash'],
   'gemini-2.0': ['gemini-2.0'],
   'grok-4': ['grok-3', 'grok-4'],
-  'grok-4-fast': ['grok-3-mini', 'grok-4-fast'],
+  'grok-4-fast': ['grok-4-fast'],
   'grok-3': ['grok-3'],
+  'grok-3-mini': ['grok-3-mini'],
   'mistral-large': ['mistral-large'],
   'deepseek-v3': ['deepseek-v3'],
   'deepseek-r1': ['deepseek-r1'],
   'gpt-5': ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4.1', 'gpt-5', 'gpt-5.1', 'gpt-5.2'],
-  'grok-4.1-fast': ['grok-3-mini', 'grok-4-fast', 'grok-4.1-fast'],
+  'grok-4.1-fast': ['grok-4-fast', 'grok-4.1-fast'],
   'gemini-3-pro': ['gemini-1.5-pro', 'gemini-2.5-pro', 'gemini-3-pro'],
   'gemini-3-flash': ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-3-flash'],
 };
@@ -91,6 +92,7 @@ export const DEFAULT_THETA: Record<string, number> = {
   'grok-4': 0.03,       // Grok 4 - newer generation
   'grok-4-fast': 0.04,  // Grok 4 Fast variant
   'grok-3': 0.03,       // New, less history
+  'grok-3-mini': 0.03,  // Grok 3 mini - similar to grok-3
   'mistral-large': 0.12, // Aggressive: $24→$12 over 5mo
   'deepseek-v3': 0.02,  // Already very cheap
   'deepseek-r1': 0.03,
@@ -118,6 +120,7 @@ export const DEFAULT_SIGMA: Record<string, number> = {
   'grok-4': 0.05,
   'grok-4-fast': 0.06,
   'grok-3': 0.05,
+  'grok-3-mini': 0.05,
   'mistral-large': 0.15,
   'deepseek-v3': 0.03,
   'deepseek-r1': 0.04,

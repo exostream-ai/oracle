@@ -218,6 +218,78 @@ describe('Domain constraints', () => {
     }
   });
 
+  it('r_cache < r_in for all families (cache reads cheaper than input)', () => {
+    for (const f of families) {
+      expect(f.r_cache).toBeLessThan(f.r_in);
+    }
+  });
+
+  it('r_in matches expected provider input/output ratios', () => {
+    // Expected r_in = input_price / output_price from provider pricing pages
+    // Source: verified against live pricing pages 2026-02-13
+    const expected: Record<string, number> = {
+      'claude-4': 0.20,
+      'claude-3.5': 0.20,
+      'claude-3': 0.20,
+      'gpt-4.1': 0.25,
+      'gpt-4o': 0.25,
+      'o-series': 0.25,
+      'gemini-2.5-pro': 0.125,
+      'gemini-2.5-flash': 0.12,
+      'gemini-2.0': 0.25,
+      'grok-4': 0.20,
+      'grok-4-fast': 0.40,
+      'grok-3': 0.20,
+      'grok-3-mini': 0.60,
+      'mistral-large': 0.333,
+      'deepseek-v3': 0.667,
+      'deepseek-r1': 0.667,
+      'gpt-5': 0.125,
+      'grok-4.1-fast': 0.40,
+      'gemini-3-pro': 0.167,
+      'gemini-3-flash': 0.167,
+    };
+
+    for (const f of families) {
+      const exp = expected[f.family_id];
+      if (exp !== undefined) {
+        expect(f.r_in).toBeCloseTo(exp, 2);
+      }
+    }
+  });
+
+  it('r_cache matches expected provider cache/output ratios', () => {
+    // Expected r_cache = cache_read_price / output_price from provider pricing pages
+    const expected: Record<string, number> = {
+      'claude-4': 0.02,
+      'claude-3.5': 0.02,
+      'claude-3': 0.02,
+      'gpt-4.1': 0.0625,
+      'gpt-4o': 0.125,
+      'o-series': 0.125,
+      'gemini-2.5-pro': 0.0125,
+      'gemini-2.5-flash': 0.012,
+      'gemini-2.0': 0.0625,
+      'grok-4': 0.05,
+      'grok-4-fast': 0.10,
+      'grok-3': 0.05,
+      'grok-3-mini': 0.14,
+      'deepseek-v3': 0.067,
+      'deepseek-r1': 0.067,
+      'gpt-5': 0.0125,
+      'grok-4.1-fast': 0.10,
+      'gemini-3-pro': 0.017,
+      'gemini-3-flash': 0.017,
+    };
+
+    for (const f of families) {
+      const exp = expected[f.family_id];
+      if (exp !== undefined) {
+        expect(f.r_cache).toBeCloseTo(exp, 3);
+      }
+    }
+  });
+
   it('every active model has at least one historical price', () => {
     const priceModelIds = new Set(historicalPrices.map(p => p.model_id));
     const activeModels = models.filter(m => m.status === 'active');

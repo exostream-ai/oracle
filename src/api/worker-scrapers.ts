@@ -29,11 +29,18 @@ function parsePrice(priceStr: string): number {
 const ANTHROPIC_MODEL_MAP: Record<string, string> = {
   'opus 4.6': 'opus-4.6',
   'opus 4.5': 'opus-4.5',
+  'opus 4.1': 'opus-4.1',
+  'opus 4': 'opus-4',
+  'opus 3': 'opus-3',
+  'sonnet 4.5': 'sonnet-4.5',
   'sonnet 4': 'sonnet-4',
+  'sonnet 3.7': 'sonnet-3.7',
   'sonnet 3.5': 'sonnet-3.5',
   '3.5 sonnet': 'sonnet-3.5',
+  'haiku 4.5': 'haiku-4.5',
   'haiku 3.5': 'haiku-3.5',
   '3.5 haiku': 'haiku-3.5',
+  'haiku 3': 'haiku-3',
 };
 
 // Google model name → model_id mapping
@@ -56,16 +63,16 @@ const DEEPSEEK_MODEL_MAP: Record<string, string> = {
 
 // xAI model name → model_id mapping
 const XAI_MODEL_MAP: Record<string, string> = {
-  'grok 3': 'grok-3',
-  'grok-3': 'grok-3',
-  'grok 3 mini': 'grok-3-mini',
-  'grok-3-mini': 'grok-3-mini',
-  'grok 4': 'grok-4',
-  'grok-4': 'grok-4',
-  'grok 4 fast': 'grok-4-fast',
-  'grok-4-fast': 'grok-4-fast',
   'grok 4.1 fast': 'grok-4.1-fast',
   'grok-4.1-fast': 'grok-4.1-fast',
+  'grok 4 fast': 'grok-4-fast',
+  'grok-4-fast': 'grok-4-fast',
+  'grok 4': 'grok-4',
+  'grok-4': 'grok-4',
+  'grok 3 mini': 'grok-3-mini',
+  'grok-3-mini': 'grok-3-mini',
+  'grok 3': 'grok-3',
+  'grok-3': 'grok-3',
 };
 
 /**
@@ -278,17 +285,21 @@ function getOpenAIFallbackPrices(): ScrapedPrice[] {
   const now = new Date().toISOString();
   return [
     { model_id: 'gpt-4.1', price_type: 'sync', beta: 8, source: 'fallback:hardcoded', observed_at: now },
-    { model_id: 'gpt-4.1', price_type: 'batch', beta: 2, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'gpt-4.1', price_type: 'batch', beta: 4.00, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-4.1-mini', price_type: 'sync', beta: 1.60, source: 'fallback:hardcoded', observed_at: now },
-    { model_id: 'gpt-4.1-mini', price_type: 'batch', beta: 0.40, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'gpt-4.1-mini', price_type: 'batch', beta: 0.80, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-4.1-nano', price_type: 'sync', beta: 0.40, source: 'fallback:hardcoded', observed_at: now },
-    { model_id: 'gpt-4.1-nano', price_type: 'batch', beta: 0.10, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'gpt-4.1-nano', price_type: 'batch', beta: 0.20, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-4o', price_type: 'sync', beta: 10, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-4o', price_type: 'batch', beta: 5, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-4o-mini', price_type: 'sync', beta: 0.60, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-4o-mini', price_type: 'batch', beta: 0.30, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'o3', price_type: 'sync', beta: 8, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'o3', price_type: 'batch', beta: 4.00, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'o3-mini', price_type: 'sync', beta: 4.40, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'o3-mini', price_type: 'batch', beta: 2.20, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'o4-mini', price_type: 'sync', beta: 4.40, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'o4-mini', price_type: 'batch', beta: 2.20, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-5', price_type: 'sync', beta: 10, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-5', price_type: 'batch', beta: 5, source: 'fallback:hardcoded', observed_at: now },
     { model_id: 'gpt-5.1', price_type: 'sync', beta: 10, source: 'fallback:hardcoded', observed_at: now },
@@ -303,7 +314,7 @@ function getOpenAIFallbackPrices(): ScrapedPrice[] {
 function getMistralFallbackPrices(): ScrapedPrice[] {
   const now = new Date().toISOString();
   return [
-    { model_id: 'mistral-large', price_type: 'sync', beta: 1.50, source: 'fallback:hardcoded', observed_at: now },
+    { model_id: 'mistral-large', price_type: 'sync', beta: 6.00, source: 'fallback:hardcoded', observed_at: now },
   ];
 }
 

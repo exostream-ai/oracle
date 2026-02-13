@@ -3,10 +3,8 @@
 import { useState } from 'react';
 
 const links = [
-  { href: '/#calculator', label: 'Calculator' },
-  { href: '/canvas', label: 'Canvas' },
-  { href: '/use-cases', label: 'Use Cases' },
-  { href: '/methodology', label: 'Methodology' },
+  { href: '/calculators', label: 'Calculators' },
+  { href: '/docs', label: 'Docs' },
   { href: '/api-docs', label: 'API' },
 ];
 

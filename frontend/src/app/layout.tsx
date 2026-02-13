@@ -31,11 +31,11 @@ export default function RootLayout({
           <footer className="border-t border-[#262626] py-3 mt-auto">
             <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
               <div className="flex items-center gap-6 text-xs text-[#737373] mono">
-                <a href="/use-cases" className="hover:text-[#e5e5e5]">Use Cases</a>
-                <a href="/api-docs" className="hover:text-[#e5e5e5]">API Docs</a>
-                <a href="/methodology" className="hover:text-[#e5e5e5]">Methodology</a>
-                <a href="https://x.com/exostream" target="_blank" rel="noopener" className="hover:text-[#e5e5e5]">
-                  @exostream
+                <a href="/docs#use-cases" className="hover:text-[#e5e5e5]">Use Cases</a>
+                <a href="/docs#api" className="hover:text-[#e5e5e5]">API Docs</a>
+                <a href="/docs#methodology" className="hover:text-[#e5e5e5]">Methodology</a>
+                <a href="https://x.com/exostreamai" target="_blank" rel="noopener" className="hover:text-[#e5e5e5]">
+                  @exostreamai
                 </a>
               </div>
               <div className="text-xs text-[#525252]">

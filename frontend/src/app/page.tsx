@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import TickerStrip from '@/components/TickerStrip';
 import TickerBoard from '@/components/TickerBoard';
-import CostCalculator from '@/components/CostCalculator';
 import { getGreeks, type GreekData } from '@/lib/api';
 
 export default function Home() {
@@ -63,12 +62,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Cost Calculator */}
-      <section id="calculator" className="py-3 px-4 border-t border-[#262626]">
-        <div className="max-w-[1400px] mx-auto">
-          <CostCalculator models={models} defaultModel="OPUS-4.5" />
-        </div>
-      </section>
     </div>
   );
 }

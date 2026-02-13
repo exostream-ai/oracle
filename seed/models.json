@@ -25,6 +25,39 @@
     "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
   },
   {
+    "model_id": "opus-4.1",
+    "family_id": "claude-4",
+    "display_name": "Claude Opus 4.1",
+    "ticker_sync": "OPUS-4.1",
+    "ticker_batch": "OPUS-4.1.B",
+    "context_window": 200000,
+    "launch_date": "2025-01-15",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "opus-4",
+    "family_id": "claude-4",
+    "display_name": "Claude Opus 4",
+    "ticker_sync": "OPUS-4",
+    "ticker_batch": "OPUS-4.B",
+    "context_window": 200000,
+    "launch_date": "2025-01-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "sonnet-4.5",
+    "family_id": "claude-4",
+    "display_name": "Claude Sonnet 4.5",
+    "ticker_sync": "SONNET-4.5",
+    "ticker_batch": "SONNET-4.5.B",
+    "context_window": 200000,
+    "launch_date": "2025-10-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
     "model_id": "sonnet-4",
     "family_id": "claude-4",
     "display_name": "Claude Sonnet 4",
@@ -33,6 +66,17 @@
     "context_window": 200000,
     "launch_date": "2025-05-01",
     "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "sonnet-3.7",
+    "family_id": "claude-3.5",
+    "display_name": "Claude 3.7 Sonnet",
+    "ticker_sync": "SONNET-3.7",
+    "ticker_batch": "SONNET-3.7.B",
+    "context_window": 200000,
+    "launch_date": "2024-08-01",
+    "status": "deprecated",
     "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
   },
   {
@@ -47,6 +91,17 @@
     "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
   },
   {
+    "model_id": "haiku-4.5",
+    "family_id": "claude-4",
+    "display_name": "Claude Haiku 4.5",
+    "ticker_sync": "HAIKU-4.5",
+    "ticker_batch": "HAIKU-4.5.B",
+    "context_window": 200000,
+    "launch_date": "2025-11-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
     "model_id": "haiku-3.5",
     "family_id": "claude-3.5",
     "display_name": "Claude 3.5 Haiku",
@@ -55,6 +110,28 @@
     "context_window": 200000,
     "launch_date": "2024-10-01",
     "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "haiku-3",
+    "family_id": "claude-3",
+    "display_name": "Claude 3 Haiku",
+    "ticker_sync": "HAIKU-3",
+    "ticker_batch": "HAIKU-3.B",
+    "context_window": 200000,
+    "launch_date": "2024-03-04",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "opus-3",
+    "family_id": "claude-3",
+    "display_name": "Claude Opus 3",
+    "ticker_sync": "OPUS-3",
+    "ticker_batch": "OPUS-3.B",
+    "context_window": 200000,
+    "launch_date": "2024-03-04",
+    "status": "deprecated",
     "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
   },
   {
@@ -117,7 +194,18 @@
     "family_id": "o-series",
     "display_name": "o3",
     "ticker_sync": "O3",
-    "ticker_batch": null,
+    "ticker_batch": "O3.B",
+    "context_window": 200000,
+    "launch_date": "2025-04-01",
+    "status": "active",
+    "tiers": [{ "tau_start": 0, "tau_end": 1.0, "alpha": 1.0 }]
+  },
+  {
+    "model_id": "o3-mini",
+    "family_id": "o-series",
+    "display_name": "o3-mini",
+    "ticker_sync": "O3-MINI",
+    "ticker_batch": "O3-MINI.B",
     "context_window": 200000,
     "launch_date": "2025-04-01",
     "status": "active",
@@ -128,7 +216,7 @@
     "family_id": "o-series",
     "display_name": "o4-mini",
     "ticker_sync": "O4-MINI",
-    "ticker_batch": null,
+    "ticker_batch": "O4-MINI.B",
     "context_window": 200000,
     "launch_date": "2025-04-01",
     "status": "active",
@@ -178,7 +266,7 @@
     "family_id": "grok-4",
     "display_name": "Grok 4",
     "ticker_sync": "GROK-4",
-    "ticker_batch": null,
+    "ticker_batch": "GROK-4.B",
     "context_window": 256000,
     "launch_date": "2025-07-09",
     "status": "active",
@@ -189,7 +277,7 @@
     "family_id": "grok-4-fast",
     "display_name": "Grok 4 Fast",
     "ticker_sync": "GROK-4-FAST",
-    "ticker_batch": null,
+    "ticker_batch": "GROK-4-FAST.B",
     "context_window": 256000,
     "launch_date": "2025-07-09",
     "status": "active",
@@ -200,7 +288,7 @@
     "family_id": "grok-3",
     "display_name": "Grok 3",
     "ticker_sync": "GROK-3",
-    "ticker_batch": null,
+    "ticker_batch": "GROK-3.B",
     "context_window": 131072,
     "launch_date": "2025-02-01",
     "status": "active",
@@ -211,7 +299,7 @@
     "family_id": "grok-3",
     "display_name": "Grok 3 mini",
     "ticker_sync": "GROK-3-MINI",
-    "ticker_batch": null,
+    "ticker_batch": "GROK-3-MINI.B",
     "context_window": 131072,
     "launch_date": "2025-02-01",
     "status": "active",
@@ -299,7 +387,7 @@
     "family_id": "grok-4.1-fast",
     "display_name": "Grok 4.1 Fast",
     "ticker_sync": "GROK-4.1-FAST",
-    "ticker_batch": null,
+    "ticker_batch": "GROK-4.1-FAST.B",
     "context_window": 2000000,
     "launch_date": "2025-12-01",
     "status": "active",

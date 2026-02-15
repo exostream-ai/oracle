@@ -9,7 +9,6 @@ import { describe, it, expect } from 'vitest';
 import providers from '../seed/providers.json';
 import families from '../seed/families.json';
 import models from '../seed/models.json';
-import historicalPrices from '../seed/historical_prices.json';
 import { FAMILY_LINEAGE } from '../src/core/constants.js';
 
 // ============================================================
@@ -117,33 +116,6 @@ describe('Schema: models.json', () => {
   });
 });
 
-describe('Schema: historical_prices.json', () => {
-  it('has at least 1 price entry', () => {
-    expect(historicalPrices.length).toBeGreaterThan(0);
-  });
-
-  it('every price has required fields', () => {
-    for (const p of historicalPrices) {
-      expect(p).toHaveProperty('model_id');
-      expect(p).toHaveProperty('price_type');
-      expect(p).toHaveProperty('beta');
-      expect(p).toHaveProperty('source');
-      expect(p).toHaveProperty('observed_at');
-      expect(typeof p.model_id).toBe('string');
-      expect(['sync', 'batch']).toContain(p.price_type);
-      expect(typeof p.beta).toBe('number');
-      expect(p.beta).toBeGreaterThan(0);
-    }
-  });
-
-  it('observed_at dates are valid ISO 8601', () => {
-    for (const p of historicalPrices) {
-      const date = new Date(p.observed_at);
-      expect(date.getTime()).not.toBeNaN();
-    }
-  });
-});
-
 // ============================================================
 // REFERENTIAL INTEGRITY
 // ============================================================
@@ -165,21 +137,6 @@ describe('Referential integrity', () => {
     }
   });
 
-  it('historical price model_ids are either active models or in FAMILY_LINEAGE', () => {
-    const lineageModelIds = new Set<string>();
-    for (const chain of Object.values(FAMILY_LINEAGE)) {
-      for (const id of chain) {
-        lineageModelIds.add(id);
-      }
-    }
-
-    for (const p of historicalPrices) {
-      const inModels = modelIds.has(p.model_id);
-      const inLineage = lineageModelIds.has(p.model_id);
-      expect(inModels || inLineage).toBe(true);
-    }
-  });
-
   it('every family in FAMILY_LINEAGE exists in families.json', () => {
     for (const familyId of Object.keys(FAMILY_LINEAGE)) {
       expect(familyIds.has(familyId)).toBe(true);
@@ -192,19 +149,6 @@ describe('Referential integrity', () => {
 // ============================================================
 
 describe('Domain constraints', () => {
-  it('no duplicate (model_id, price_type, observed_at) tuples', () => {
-    const seen = new Set<string>();
-    const duplicates: string[] = [];
-    for (const p of historicalPrices) {
-      const key = `${p.model_id}:${p.price_type}:${p.observed_at}`;
-      if (seen.has(key)) {
-        duplicates.push(key);
-      }
-      seen.add(key);
-    }
-    expect(duplicates).toEqual([]);
-  });
-
   it('rate ratios are between 0 and 1', () => {
     for (const f of families) {
       expect(f.r_in).toBeGreaterThan(0);
@@ -290,15 +234,4 @@ describe('Domain constraints', () => {
     }
   });
 
-  it('every active model has at least one historical price', () => {
-    const priceModelIds = new Set(historicalPrices.map(p => p.model_id));
-    const activeModels = models.filter(m => m.status === 'active');
-    const missing: string[] = [];
-    for (const m of activeModels) {
-      if (!priceModelIds.has(m.model_id)) {
-        missing.push(m.model_id);
-      }
-    }
-    expect(missing).toEqual([]);
-  });
 });

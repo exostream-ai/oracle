@@ -14,11 +14,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/core': resolve(__dirname, './src/core'),
-      '@/scrapers': resolve(__dirname, './src/scrapers'),
-      '@/engine': resolve(__dirname, './src/engine'),
-      '@/api': resolve(__dirname, './src/api'),
-      '@/mcp': resolve(__dirname, './src/mcp'),
-      '@/db': resolve(__dirname, './src/db'),
     },
   },
 });

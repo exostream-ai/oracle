@@ -16,12 +16,7 @@
     "rootDir": "./src",
     "baseUrl": ".",
     "paths": {
-      "@/core/*": ["src/core/*"],
-      "@/scrapers/*": ["src/scrapers/*"],
-      "@/engine/*": ["src/engine/*"],
-      "@/api/*": ["src/api/*"],
-      "@/mcp/*": ["src/mcp/*"],
-      "@/db/*": ["src/db/*"]
+      "@/core/*": ["src/core/*"]
     }
   },
   "include": ["src/**/*"],

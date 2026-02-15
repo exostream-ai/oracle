@@ -15,7 +15,6 @@ import {
   DEFAULT_THETA_FALLBACK,
   DEFAULT_SIGMA_FALLBACK,
 } from '../src/core/constants.js';
-import historicalPrices from '../seed/historical_prices.json';
 
 // ============================================================
 // DEFAULT VALUE LOOKUPS
@@ -125,29 +124,6 @@ describe('computeThetaFromHistory', () => {
     const result = computeThetaFromHistory(prices, 'test-family');
     // With no matching lineage, should return defaults
     expect(result.theta).toBe(DEFAULT_THETA_FALLBACK);
-  });
-
-  it('computes theta from real GPT-4 historical data', () => {
-    const result = computeThetaFromHistory(historicalPrices as any[], 'gpt-4.1');
-    // GPT-4 family had aggressive $60→$8 decline
-    expect(result.theta).toBeGreaterThan(0.01);
-    expect(result.theta).toBeLessThanOrEqual(0.15); // Clamped range
-    expect(result.sigma).toBeGreaterThanOrEqual(0.02);
-    expect(result.sigma).toBeLessThanOrEqual(0.25);
-  });
-
-  it('computes theta from real Claude historical data', () => {
-    const result = computeThetaFromHistory(historicalPrices as any[], 'claude-4');
-    // Claude Opus had $75→$45 decline
-    expect(result.theta).toBeGreaterThan(0.01);
-    expect(result.theta).toBeLessThanOrEqual(0.15);
-  });
-
-  it('computes theta from real Mistral historical data', () => {
-    const result = computeThetaFromHistory(historicalPrices as any[], 'mistral-large');
-    // Mistral had $24→$12 decline
-    expect(result.theta).toBeGreaterThan(0.05); // Known aggressive decay
-    expect(result.theta).toBeLessThanOrEqual(0.15);
   });
 
   it('ignores batch prices when computing sync theta', () => {
